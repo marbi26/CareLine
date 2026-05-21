@@ -26,7 +26,7 @@ app.use(express.json({ limit: "5mb" }));
 
 const PORT = Number(process.env.PORT || 5050);
 const BIND_HOST = process.env.BIND_HOST || "0.0.0.0";
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/careline";
+const MONGODB_URI = process.env.MONGO_URL || process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/careline";
 const JWT_SECRET = process.env.JWT_SECRET || "careline-secret";
 
 
