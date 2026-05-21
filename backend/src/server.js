@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import express from "express";
 import cors from "cors";
 import path from "path";
@@ -26,6 +27,8 @@ app.use(express.json({ limit: "5mb" }));
 const PORT = Number(process.env.PORT || 5050);
 const BIND_HOST = process.env.BIND_HOST || "0.0.0.0";
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/careline";
+const JWT_SECRET = process.env.JWT_SECRET || "careline-secret";
+
 
 const __dirnamePath = path.dirname(fileURLToPath(import.meta.url));
 const CARELINE_ROOT = path.join(__dirnamePath, "..", "..");
@@ -357,14 +360,19 @@ app.post("/api/auth/signup/verify", async (req, res) => {
   await user.save();
   otpStore.delete(mobile);
 
-  const token = crypto.randomBytes(18).toString("base64url");
-  const isDoctorPending = user.role === "doctor" && user.status !== "active";
-  return res.json({
-    ok: true,
-    message: isDoctorPending ? "Account created (pending admin approval)" : "Account created",
-    token,
-    user: publicUser(user.toObject()),
-  });
+  // ✅ NEW improved code
+const token = jwt.sign(
+  { id: user._id, role: user.role },
+  JWT_SECRET,
+  { expiresIn: "7d" }
+);
+const isDoctorPending = user.role === "doctor" && user.status !== "active";
+return res.json({
+  ok: true,
+  message: isDoctorPending ? "Account created (pending admin approval)" : "Account created",
+  token,
+  user: publicUser(user.toObject()),
+});
 });
 
 // ---- Login ----
@@ -399,8 +407,13 @@ app.post("/api/auth/login", async (req, res) => {
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return res.status(401).json({ ok: false, error: "INVALID_CREDENTIALS", message: "Invalid credentials" });
 
-  const token = crypto.randomBytes(18).toString("base64url");
-  return res.json({ ok: true, message: "Logged in", token, user: publicUser(user.toObject()) });
+  // ✅ NEW improved code
+    const token = jwt.sign(
+        { id: user._id, role: user.role },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+    );
+    return res.json({ ok: true, message: "Logged in", token, user: publicUser(user.toObject()) });
 });
 
 // ---- Public: list / search approved doctors ----
