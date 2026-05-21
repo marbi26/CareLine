@@ -1,0 +1,22 @@
+{
+  "name": "careline-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CareLine auth backend (login/signup/otp)",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^5.1.0",
+    "mongoose": "^9.6.2",
+    "nodemailer": "^8.0.7",
+    "twilio": "^6.0.2",
+    "zod": "^4.1.0"
+  }
+}
