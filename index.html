@@ -4381,7 +4381,7 @@
           <div class="left">
             <div class="r-title">Consultation Fee</div>
             <div class="r-meta">Dr. Asha Verma · 12 Oct 2025</div>
-            <div class="r-meta" style="color:var(--teal-300); font-weight:700; margin-top:4px; font-size:0.9rem;">$45.00</div>
+            <div class="r-meta" style="color:var(--teal-300); font-weight:700; margin-top:4px; font-size:0.9rem;">Rs45.00</div>
           </div>
           <div class="right" style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
             <span class="badge ok">Paid via Card</span>
@@ -4392,7 +4392,7 @@
           <div class="left">
             <div class="r-title">Lab Tests (CBC)</div>
             <div class="r-meta">CareLine Labs · 10 Oct 2025</div>
-            <div class="r-meta" style="color:var(--teal-300); font-weight:700; margin-top:4px; font-size:0.9rem;">$120.00</div>
+            <div class="r-meta" style="color:var(--teal-300); font-weight:700; margin-top:4px; font-size:0.9rem;">Rs120.00</div>
           </div>
           <div class="right" style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
             <span class="badge ok">Paid via UPI</span>
@@ -4541,9 +4541,9 @@
       try {
         const data = await api('/api/admin/reports/financial?clinicId=' + authUser.id);
         const s = data.stats;
-        g('fin-daily').textContent = `$${s.daily.toLocaleString()}`;
-        g('fin-weekly').textContent = `$${s.weekly.toLocaleString()}`;
-        g('fin-monthly').textContent = `$${s.monthly.toLocaleString()}`;
+        g('fin-daily').textContent = `Rs${s.daily.toLocaleString()}`;
+        g('fin-weekly').textContent = `Rs${s.weekly.toLocaleString()}`;
+        g('fin-monthly').textContent = `Rs${s.monthly.toLocaleString()}`;
         
         const list = g('fin-recent-list');
         if (s.recent.length === 0) {
@@ -4558,7 +4558,7 @@
               <div class="r-meta">${new Date(p.createdAt).toLocaleDateString()} · ${escapeHtml(p.method)}</div>
             </div>
             <div class="right">
-              <div style="font-weight:900; color:var(--teal-300);">$${p.amount}</div>
+              <div style="font-weight:900; color:var(--teal-300);">Rs${p.amount}</div>
               <div class="badge ok" style="font-size:0.6rem; margin-top:4px;">Success</div>
             </div>
           </div>
@@ -4576,17 +4576,17 @@
       <div class="cards" style="margin-bottom:20px;">
         <div class="kpi">
           <div class="kLabel">Today's Revenue</div>
-          <div class="kValue" id="fin-daily">$0.00</div>
+          <div class="kValue" id="fin-daily"Rs$0.00</div>
           <div class="kNote">Settled today</div>
         </div>
         <div class="kpi">
           <div class="kLabel">Last 7 Days</div>
-          <div class="kValue" id="fin-weekly">$0.00</div>
+          <div class="kValue" id="fin-weekly">Rs0.00</div>
           <div class="kNote">Weekly throughput</div>
         </div>
         <div class="kpi">
           <div class="kLabel">Last 30 Days</div>
-          <div class="kValue" id="fin-monthly">$0.00</div>
+          <div class="kValue" id="fin-monthly">Rs0.00</div>
           <div class="kNote">Monthly summary</div>
         </div>
       </div>
@@ -4746,7 +4746,7 @@
             <div class="sc-body">
               <div class="sc-name">${escapeHtml(c.name)}</div>
               <div class="sc-meta">📍 ${escapeHtml(c.location)}</div>
-              <div class="sc-meta" style="color:var(--teal-300); font-weight:700;">Fee: $${c.consultationFee || 500}</div>
+              <div class="sc-meta" style="color:var(--teal-300); font-weight:700;">Fee: Rs{c.consultationFee || 500}</div>
             </div>
             <div class="sc-check">✓</div>
           </button>`).join('');
@@ -4906,7 +4906,7 @@
           <div class="ti-row"><span class="ti-label">📍 Status</span><span style="color:var(--teal-700); font-weight:700;">Payment Pending</span></div>`;
 
         // Update payment step with reserved token
-        g('paymentTokenMsg').textContent = `Token #${appt.token} reserved. Pay $${wiz.consultationFee || 500} to confirm.`;
+        g('paymentTokenMsg').textContent = `Token #${appt.token} reserved. Pay Rs{wiz.consultationFee || 500} to confirm.`;
 
         // Jump to Payment (Step 4)
         wizardGoStep(4);
