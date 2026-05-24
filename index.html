@@ -2447,11 +2447,253 @@
       color: var(--teal-100);
     }
 
-    .doc-section p {
-      font-size: 0.85rem;
+    /* ─── Chat System ─── */
+    .chat-container {
+      display: flex;
+      height: 600px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: var(--shadow-card);
+      margin-top: 16px;
+      animation: panelSlide 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .chat-sidebar {
+      width: 250px;
+      border-right: 1px solid var(--glass-border);
+      display: flex;
+      flex-direction: column;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .chat-sidebar-header {
+      padding: 16px;
+      font-family: var(--font-head);
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-bottom: 1px solid var(--glass-border);
+      color: var(--teal-900);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-contacts-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .contact-item {
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-bottom: 6px;
+      position: relative;
+    }
+
+    .contact-item:hover {
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .contact-item.active {
+      background: rgba(59, 130, 246, 0.15);
+      border-left: 3px solid var(--teal-700);
+    }
+
+    .contact-name-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .contact-name {
+      font-family: var(--font-head);
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--white);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;
+    }
+
+    .contact-role {
+      font-size: 0.72rem;
       color: var(--muted);
-      line-height: 1.5;
-      margin-bottom: 8px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    .contact-last-msg {
+      font-size: 0.76rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .contact-unread {
+      background: var(--error);
+      color: #ffffff;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 10px;
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .chat-window {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .chat-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chat-header-info {
+      flex: 1;
+    }
+
+    .chat-header-name {
+      font-family: var(--font-head);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .chat-header-status {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .chat-bubble-container {
+      display: flex;
+      flex-direction: column;
+      max-width: 75%;
+    }
+
+    .chat-bubble-container.sent {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+
+    .chat-bubble-container.received {
+      align-self: flex-start;
+      align-items: flex-start;
+    }
+
+    .chat-bubble {
+      padding: 10px 16px;
+      border-radius: 18px;
+      font-size: 0.88rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .chat-bubble-container.sent .chat-bubble {
+      background: linear-gradient(135deg, var(--teal-700) 0%, var(--teal-500) 100%);
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.18);
+    }
+
+    .chat-bubble-container.received .chat-bubble {
+      background: var(--input-bg);
+      color: var(--white);
+      border-bottom-left-radius: 4px;
+      border: 1px solid var(--glass-border);
+    }
+
+    .chat-time {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .chat-input-bar {
+      padding: 16px;
+      border-top: 1px solid var(--glass-border);
+      display: flex;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .chat-input-bar input {
+      flex: 1;
+      padding: 11px 16px;
+      background: var(--input-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-input);
+      color: var(--white);
+      font-family: var(--font-body);
+      font-size: 0.89rem;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .chat-input-bar input:focus {
+      border-color: var(--teal-700);
+      background: var(--input-focus);
+    }
+
+    .chat-input-bar button {
+      padding: 0 20px;
+      background: linear-gradient(135deg, var(--teal-700) 0%, var(--teal-500) 100%);
+      border: none;
+      border-radius: var(--radius-btn);
+      color: #ffffff;
+      font-family: var(--font-head);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
+    }
+
+    .chat-input-bar button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35);
+    }
+
+    .chat-empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 20px;
     }
   </style>
 </head>
@@ -2691,17 +2933,17 @@
         <div id="dashDefault">
           <div class="cards">
             <div class="kpi">
-              <div class="kLabel">Today</div>
+              <div class="kLabel" id="kpi1l">Today</div>
               <div class="kValue" id="kpi1">—</div>
               <div class="kNote" id="kpi1n">—</div>
             </div>
             <div class="kpi">
-              <div class="kLabel">Queue</div>
+              <div class="kLabel" id="kpi2l">Queue</div>
               <div class="kValue" id="kpi2">—</div>
               <div class="kNote" id="kpi2n">—</div>
             </div>
             <div class="kpi">
-              <div class="kLabel">Notifications</div>
+              <div class="kLabel" id="kpi3l">Notifications</div>
               <div class="kValue" id="kpi3">—</div>
               <div class="kNote" id="kpi3n">—</div>
             </div>
@@ -3450,6 +3692,9 @@
       <button data-view="payments" onclick="dashView('payments')">
         <span>Payments</span><span class="badge">Billing</span>
       </button>
+      <button data-view="messages" onclick="dashView('messages')">
+        <span>Messages</span><span class="badge">Chat</span>
+      </button>
       <button data-view="settings" onclick="dashView('settings')">
         <span>Settings</span><span class="badge">Profile</span>
       </button>`;
@@ -3470,6 +3715,9 @@
         </button>
         <button data-view="doc-history" onclick="dashView('doc-history')">
           <span>Medical history</span><span class="badge">View</span>
+        </button>
+        <button data-view="messages" onclick="dashView('messages')">
+          <span>Messages</span><span class="badge">Chat</span>
         </button>
         <button data-view="settings" onclick="dashView('settings')">
           <span>Settings</span><span class="badge">Profile</span>
@@ -3494,6 +3742,9 @@
         <button data-view="admin-docs" onclick="dashView('admin-docs')">
           <span>Documentation</span><span class="badge">Docs</span>
         </button>
+        <button data-view="messages" onclick="dashView('messages')">
+          <span>Messages</span><span class="badge">Chat</span>
+        </button>
         <button data-view="settings" onclick="dashView('settings')">
           <span>Settings</span><span class="badge">Profile</span>
         </button>`;
@@ -3507,6 +3758,9 @@
         </button>
         <button data-view="patients" onclick="dashView('patients')">
           <span>Patients</span><span class="badge">Records</span>
+        </button>
+        <button data-view="messages" onclick="dashView('messages')">
+          <span>Messages</span><span class="badge">Chat</span>
         </button>
         <button data-view="settings" onclick="dashView('settings')">
           <span>Settings</span><span class="badge">Profile</span>
@@ -3563,6 +3817,7 @@
       if (g('patientRecordsView')) g('patientRecordsView').classList.remove('show');
       if (g('patientPaymentsView')) g('patientPaymentsView').classList.remove('show');
       if (g('patientApptsView')) g('patientApptsView').classList.remove('show');
+      if (g('messagesView')) g('messagesView').classList.remove('show');
 
 
       // Admin Views
@@ -3676,17 +3931,20 @@
       } else if (view === 'patients') {
         g('dashTitle').textContent = 'Patients';
         g('dashSub').textContent = 'Patient records & quick lookup (demo).';
-      } else if (view === 'settings') {
-        g('dashTitle').textContent = 'Profile & Settings';
-        g('dashSub').textContent = 'Manage your profile and preferences.';
-        g('dashDefault').style.display = 'none';
-        ensureSettingsViewAttached();
-        renderSettings();
         g('settingsView').classList.add('show');
+        return;
+      } else if (view === 'messages') {
+        g('dashTitle').textContent = 'Direct Messages';
+        g('dashSub').textContent = 'Secure, end-to-end messaging with your healthcare providers/patients.';
+        g('dashDefault').style.display = 'none';
+        ensureMessagesViewAttached();
+        g('messagesView').classList.add('show');
+        loadContacts();
         return;
       }
 
       if (view !== 'appointments') clearInterval(window.__apptRefreshTimer);
+      if (view !== 'messages') stopChatPolling();
       if (view === 'overview' && role === 'patient') {
         g('dashDefault').style.display = 'block';
       }
@@ -3968,18 +4226,49 @@
       }
     }
 
+    function toggleAssignType(type) {
+      if (type === 'existing') {
+        g('btnAssignExisting').classList.add('active');
+        g('btnAssignWalkin').classList.remove('active');
+        g('assignExistingSection').style.display = 'block';
+        g('assignWalkinSection').style.display = 'none';
+      } else {
+        g('btnAssignWalkin').classList.add('active');
+        g('btnAssignExisting').classList.remove('active');
+        g('assignExistingSection').style.display = 'none';
+        g('assignWalkinSection').style.display = 'block';
+      }
+    }
+
     async function adminAssignToken() {
-      const pid = g('adminAssignPatient').value;
-      if (!pid) { showToast('Please select a patient.', '⚠️', true); return; }
+      const typeBtn = g('btnAssignWalkin');
+      const type = (typeBtn && typeBtn.classList.contains('active')) ? 'walkin' : 'existing';
+      let pid = '';
+      let pname = '';
+      let pmobile = '';
+
+      if (type === 'existing') {
+        pid = g('adminAssignPatient').value;
+        if (!pid) { showToast('Please select a patient.', '⚠️', true); return; }
+      } else {
+        pname = g('adminAssignWalkinName').value.trim();
+        pmobile = g('adminAssignWalkinMobile').value.trim();
+        if (!pname || !pmobile) { showToast('Please enter name and mobile for walk-in patient.', '⚠️', true); return; }
+      }
+
+      const doctorId = g('adminAssignDoctor')?.value || '';
       const reason = g('adminAssignReason').value;
       try {
         await api('/api/admin/queue/assign', {
           method: 'POST',
-          body: { patientId: pid, reason, clinicId: authUser.id },
+          body: { patientId: pid, patientName: pname, patientMobile: pmobile, reason, clinicId: authUser.id, doctorId: doctorId || undefined },
           headers: { 'x-careline-admin-key': 'careline-admin' }
         });
         showToast('Token assigned successfully.', '✅');
         g('adminAssignReason').value = '';
+        if (g('adminAssignWalkinName')) g('adminAssignWalkinName').value = '';
+        if (g('adminAssignWalkinMobile')) g('adminAssignWalkinMobile').value = '';
+        if (g('adminAssignDoctor')) g('adminAssignDoctor').value = '';
         adminFetchQueue();
       } catch (e) {
         showToast(e.message || 'Assignment failed.', '⚠️', true);
@@ -4016,7 +4305,7 @@
       const fee = g('admin-service-fee')?.value;
       const location = g('admin-service-hours')?.value; // Using this field for location in this demo
       try {
-        const data = await api('/api/admin/update-profile', {
+        const data = await api('/api/user/update-profile', {
           method: 'POST',
           body: { userId: authUser.id, consultationFee: fee, clinicLocation: location }
         });
@@ -4136,19 +4425,50 @@
         </section>
         <section class="panel">
           <h3>Assign Token</h3>
-          <div class="subtle" style="margin-bottom:14px;">Select a registered patient to assign the next token.</div>
+          <div class="subtle" style="margin-bottom:14px;">Assign a token to a walk-in patient and add them to the live queue.</div>
           <div class="form-group">
-            <label>Select Patient</label>
+            <div class="tabs" style="margin-bottom:12px;">
+              <button class="tab-btn active" id="btnAssignExisting" onclick="toggleAssignType('existing')">Existing</button>
+              <button class="tab-btn" id="btnAssignWalkin" onclick="toggleAssignType('walkin')">Walk-in</button>
+            </div>
+          </div>
+          <div id="assignExistingSection">
+            <div class="form-group">
+              <label>Select Patient</label>
+              <div class="input-wrap">
+                <span class="i-icon">👤</span>
+                <select id="adminAssignPatient"><option value="">Loading patients...</option></select>
+              </div>
+            </div>
+          </div>
+          <div id="assignWalkinSection" style="display:none;">
+            <div class="form-group">
+              <label>Patient Name</label>
+              <div class="input-wrap">
+                <span class="i-icon">👤</span>
+                <input type="text" id="adminAssignWalkinName" placeholder="Full Name" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Mobile Number</label>
+              <div class="input-wrap">
+                <span class="i-icon">📱</span>
+                <input type="text" id="adminAssignWalkinMobile" placeholder="10-digit mobile" />
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Assign to Doctor</label>
             <div class="input-wrap">
-              <span class="i-icon">👤</span>
-              <select id="adminAssignPatient"><option value="">Loading patients...</option></select>
+              <span class="i-icon">🩺</span>
+              <select id="adminAssignDoctor"><option value="">Loading doctors...</option></select>
             </div>
           </div>
           <div class="form-group">
             <label>Reason for Visit</label>
             <div class="input-wrap">
               <span class="i-icon">📝</span>
-              <input type="text" id="adminAssignReason" placeholder="e.g. Fever" />
+              <input type="text" id="adminAssignReason" placeholder="e.g. Fever, Routine Checkup" />
             </div>
           </div>
           <button class="btnTiny primary" onclick="adminAssignToken()">Assign Token</button>
@@ -4202,7 +4522,7 @@
         <div class="hTitle">Global Settings</div>
         <div class="hBody">
           <div class="form-group">
-            <label>Default Consultation Fee ($)</label>
+            <label>Default Consultation Fee (Rs)</label>
             <div class="input-wrap"><input type="number" id="admin-service-fee" value="${authUser.profile?.consultationFee || 500}" style="padding:10px; background:var(--input-bg); border:1px solid var(--glass-border); color:var(--white); border-radius:12px; width:100%;"></div>
           </div>
           <div class="form-group">
@@ -4993,9 +5313,9 @@
     async function docCompleteAppt(apptId) {
       if (!confirm('Mark this consultation as completed?')) return;
       try {
-        await api('/api/queue/update-stage', {
+        await api('/api/doctor/queue/complete', {
           method: 'POST',
-          body: { apptId, stage: 'completed' }
+          body: { apptId, userId: authUser.id }
         });
         showToast('Consultation marked as completed.', '✅');
         docRender(window.__docView);
@@ -5071,7 +5391,7 @@
         rightTitle.textContent = 'Queue actions';
         const items = st.queue
           .map(qi => ({ qi, appt: docApptById(qi.apptId) }))
-          .filter(x => x.appt && docMatches(x.appt, q));
+          .filter(x => x.appt && docMatches(x.appt, q) && !['completed', 'no-show'].includes(x.qi.stage));
 
         leftList.innerHTML = items.length ? items.map(({ qi, appt }) => {
           const p = st.patients[appt.patientId];
@@ -5256,19 +5576,35 @@
             data.patients.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.fullName)} (${escapeHtml(p.mobile)})</option>`).join('');
         }
 
-        if (!data.queue || !data.queue.length) {
+        // Load doctors for this clinic into the doctor dropdown
+        const doctorSelect = g('adminAssignDoctor');
+        if (doctorSelect) {
+          try {
+            const docData = await api('/api/clinics/' + authUser.id + '/doctors');
+            const docs = docData.doctors || [];
+            doctorSelect.innerHTML = '<option value="">Select a doctor (optional)</option>' +
+              docs.map(d => `<option value="${escapeHtml(d.id)}">${escapeHtml(d.fullName)} (${escapeHtml(d.specialization)})</option>`).join('');
+          } catch (e) {
+            doctorSelect.innerHTML = '<option value="">No doctors found</option>';
+          }
+        }
+
+        const activeQueue = (data.queue || []).filter(q => !['completed', 'no-show'].includes(q.stage));
+
+        if (!activeQueue.length) {
           list.innerHTML = '<div class="subtle">Queue is empty.</div>';
           return;
         }
 
         let html = '';
-        data.queue.forEach(q => {
+        activeQueue.forEach(q => {
           const b = docBadge(q.stage);
           const isSel = q.appt.id === __adminSelectedApptId;
+          const patientName = q.patient ? (q.patient.fullName || q.patient.name || 'Unknown') : 'Unknown';
           html += `
         <div class="queueItem" style="margin-bottom:8px; ${isSel ? 'border-color: rgba(45,224,208,0.32); background: rgba(45,224,208,0.06);' : ''}">
           <div>
-            <div class="pName">Token #${escapeHtml(q.appt.token)} · ${escapeHtml(q.patient ? q.patient.name : 'Unknown')}</div>
+            <div class="pName">Token #${escapeHtml(q.appt.token)} · ${escapeHtml(patientName)}</div>
             <div class="pMeta">${escapeHtml(q.appt.time)} · ${escapeHtml(q.appt.reason)}</div>
           </div>
           <div class="right">
@@ -5298,6 +5634,22 @@
     function adminSelectAppt(id) {
       __adminSelectedApptId = (__adminSelectedApptId === id) ? null : id;
       adminFetchQueue();
+    }
+
+    async function adminDeleteQueueItem(apptId) {
+      if (!confirm('Remove this token from the live queue?')) return;
+      try {
+        await api('/api/admin/queue/delete', {
+          method: 'POST',
+          body: { apptId },
+          headers: { 'x-careline-admin-key': 'careline-admin' }
+        });
+        showToast('Token removed.', '🗑️');
+        __adminSelectedApptId = null;
+        adminFetchQueue();
+      } catch (e) {
+        showToast(e.message || 'Failed to remove token', '⚠️', true);
+      }
     }
 
 
@@ -5618,10 +5970,13 @@
           const s = data.stats;
           g('kpi1').textContent = s.kpi1;
           g('kpi1n').textContent = s.kpi1n;
+          if (s.kpi1l) g('kpi1l').textContent = s.kpi1l;
           g('kpi2').textContent = s.kpi2;
           g('kpi2n').textContent = s.kpi2n;
+          if (s.kpi2l) g('kpi2l').textContent = s.kpi2l;
           g('kpi3').textContent = String(s.kpi3);
           g('kpi3n').textContent = s.kpi3n;
+          if (s.kpi3l) g('kpi3l').textContent = s.kpi3l;
         }
       } catch (e) {
         console.warn('Dashboard stats hydration failed', e);
@@ -6134,6 +6489,217 @@ async function fetchPatientDoctorProfiles() {
       // remove undefined keys
       Object.keys(p).forEach(k => p[k] === undefined && delete p[k]);
       return p;
+    }
+
+
+    /* ─── Direct Messages System ─── */
+    window.__activeChatContactId = null;
+    window.__chatPollIntervalId = null;
+    window.__chattedContacts = [];
+
+    function ensureMessagesViewAttached() {
+      const main = document.querySelector('.main');
+      if (g('messagesView')) return;
+
+      const msgView = document.createElement('div');
+      msgView.id = 'messagesView';
+      msgView.className = 'patient-view-panel';
+      msgView.innerHTML = `
+        <div class="chat-container">
+          <div class="chat-sidebar">
+            <div class="chat-sidebar-header">
+              <span>Conversations</span>
+            </div>
+            <div class="chat-contacts-list" id="chatContactsList">
+              <div class="chat-empty-state" style="padding:15px; font-size:0.8rem;">Loading...</div>
+            </div>
+          </div>
+          <div class="chat-window" id="chatWindow">
+            <div class="chat-empty-state" id="chatEmptyState">
+              <span style="font-size:3rem; margin-bottom:12px;">💬</span>
+              <h4>Select a Conversation</h4>
+              <p style="font-size:0.8rem; max-width:260px; margin-top:8px;">Choose a doctor, clinic, or patient from the list on the left to start messaging.</p>
+            </div>
+            <div class="chat-header" id="chatHeader" style="display:none;">
+              <div class="chat-header-info">
+                <div class="chat-header-name" id="chatHeaderName">Dr. Aman Sharma</div>
+                <div class="chat-header-status" id="chatHeaderStatus">Cardiologist</div>
+              </div>
+            </div>
+            <div class="chat-messages" id="chatMessages" style="display:none;">
+              <!-- Message bubbles go here -->
+            </div>
+            <div class="chat-input-bar" id="chatInputBar" style="display:none;">
+              <input type="text" id="chatInputField" placeholder="Type a message..." onkeydown="handleChatInputKeydown(event)" autocomplete="off">
+              <button onclick="sendChatMessage()">Send</button>
+            </div>
+          </div>
+        </div>`;
+      main.appendChild(msgView);
+    }
+
+    async function loadContacts() {
+      if (!authUser) return;
+      try {
+        const data = await api('/api/messages/contacts?userId=' + authUser.id);
+        window.__chattedContacts = data.contacts || [];
+        renderContactsList();
+      } catch (e) {
+        console.error("Failed to load contacts", e);
+        const list = g('chatContactsList');
+        if (list) list.innerHTML = '<div class="chat-empty-state" style="color:var(--error); font-size:0.8rem;">Failed to load.</div>';
+      }
+    }
+
+    function renderContactsList() {
+      const list = g('chatContactsList');
+      if (!list) return;
+
+      if (!window.__chattedContacts.length) {
+        list.innerHTML = `
+          <div class="chat-empty-state" style="padding: 15px; font-size:0.8rem; text-align:center;">
+            <span>📭</span>
+            <div style="margin-top:8px; font-weight:600;">No contacts</div>
+            <div style="font-size:0.75rem; color:var(--muted); margin-top:4px;">Book an appointment to start chatting.</div>
+          </div>`;
+        return;
+      }
+
+      list.innerHTML = window.__chattedContacts.map(c => {
+        const isActive = c.id === window.__activeChatContactId;
+        const lastMsgText = c.lastMessage ? escapeHtml(c.lastMessage.content) : 'No messages yet';
+        const unreadBadge = c.unreadCount > 0 ? `<span class="contact-unread">${c.unreadCount}</span>` : '';
+        const namePrefix = c.role === 'doctor' ? 'Dr. ' : '';
+        return `
+          <div class="contact-item ${isActive ? 'active' : ''}" onclick="selectChatContact('${escapeJs(c.id)}')">
+            <div class="contact-name-row">
+              <span class="contact-name">${escapeHtml(namePrefix + c.fullName)}</span>
+              <span class="contact-role">${escapeHtml(c.subLabel || c.role)}</span>
+            </div>
+            <div class="contact-last-msg">${lastMsgText}</div>
+            ${unreadBadge}
+          </div>`;
+      }).join('');
+    }
+
+    async function selectChatContact(contactId) {
+      window.__activeChatContactId = contactId;
+      renderContactsList();
+
+      const contact = window.__chattedContacts.find(c => c.id === contactId);
+      if (!contact) return;
+
+      g('chatEmptyState').style.display = 'none';
+      g('chatHeader').style.display = 'flex';
+      g('chatMessages').style.display = 'flex';
+      g('chatInputBar').style.display = 'flex';
+
+      const namePrefix = contact.role === 'doctor' ? 'Dr. ' : '';
+      g('chatHeaderName').textContent = namePrefix + contact.fullName;
+      g('chatHeaderStatus').textContent = contact.subLabel || contact.role;
+
+      g('chatInputField').value = '';
+      g('chatInputField').focus();
+
+      window.__forceScrollChatBottom = true;
+      await loadChatHistory(contactId);
+
+      startChatPolling();
+    }
+
+    async function loadChatHistory(contactId) {
+      if (!authUser || !contactId) return;
+      try {
+        const data = await api(`/api/messages/history?user1=${authUser.id}&user2=${contactId}&viewerId=${authUser.id}`);
+        const messages = data.messages || [];
+        renderChatMessages(messages);
+      } catch (e) {
+        console.error("Failed to load chat history", e);
+      }
+    }
+
+    function renderChatMessages(messages) {
+      const container = g('chatMessages');
+      if (!container) return;
+
+      const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 50;
+
+      if (!messages.length) {
+        container.innerHTML = `
+          <div class="chat-empty-state" style="padding-top:40px;">
+            <span>👋</span>
+            <div style="margin-top:8px;">Say hello!</div>
+            <p style="font-size:0.75rem; margin-top:4px;">Start the conversation by typing below.</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = messages.map(m => {
+        const isSent = m.senderId === authUser.id;
+        const timeStr = new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `
+          <div class="chat-bubble-container ${isSent ? 'sent' : 'received'}">
+            <div class="chat-bubble">
+              ${escapeHtml(m.content)}
+            </div>
+            <div class="chat-time">${timeStr}</div>
+          </div>`;
+      }).join('');
+
+      if (isScrolledToBottom || window.__forceScrollChatBottom) {
+        container.scrollTop = container.scrollHeight;
+        window.__forceScrollChatBottom = false;
+      }
+    }
+
+    function handleChatInputKeydown(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendChatMessage();
+      }
+    }
+
+    async function sendChatMessage() {
+      const input = g('chatInputField');
+      if (!input || !authUser || !window.__activeChatContactId) return;
+
+      const content = input.value.trim();
+      if (!content) return;
+
+      input.value = '';
+
+      try {
+        const data = await api('/api/messages/send', {
+          method: 'POST',
+          body: {
+            senderId: authUser.id,
+            receiverId: window.__activeChatContactId,
+            content: content
+          }
+        });
+
+        window.__forceScrollChatBottom = true;
+        await loadChatHistory(window.__activeChatContactId);
+        loadContacts();
+      } catch (e) {
+        showToast(e.message || 'Failed to send message', '⚠️', true);
+      }
+    }
+
+    function startChatPolling() {
+      stopChatPolling();
+      window.__chatPollIntervalId = setInterval(async () => {
+        if (window.__activeChatContactId && window.__lastDashView === 'messages') {
+          await loadChatHistory(window.__activeChatContactId);
+        }
+      }, 4000);
+    }
+
+    function stopChatPolling() {
+      if (window.__chatPollIntervalId) {
+        clearInterval(window.__chatPollIntervalId);
+        window.__chatPollIntervalId = null;
+      }
     }
 
     // Auto-enter dashboard if token exists (demo)

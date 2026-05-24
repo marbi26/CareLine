@@ -9,6 +9,7 @@
     "dev": "node src/server.js",
     "start": "node src/server.js"
   },
+<<<<<<< HEAD
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
@@ -18,5 +19,18 @@
     "nodemailer": "^8.0.7",
     "twilio": "^6.0.2",
     "zod": "^4.1.0"
+=======
+  "author": "Marbi",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.6.2",
+    "nodemailer": "^8.0.7",
+    "twilio": "^6.0.2",
+    "zod": "^4.4.3"
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
   }
 }

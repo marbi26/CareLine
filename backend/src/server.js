@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+import jwt from "jsonwebtoken";
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 import express from "express";
 import cors from "cors";
 import path from "path";
@@ -10,7 +14,11 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import twilio from "twilio";
+<<<<<<< HEAD
 import { User, Appointment, Queue, Payment, SystemState } from "./models.js";
+=======
+import { User, Appointment, Queue, Payment, SystemState, Message } from "./models.js";
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 
 dotenv.config();
 
@@ -25,7 +33,13 @@ app.use(express.json({ limit: "5mb" }));
 
 const PORT = Number(process.env.PORT || 5050);
 const BIND_HOST = process.env.BIND_HOST || "0.0.0.0";
+<<<<<<< HEAD
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/careline";
+=======
+const MONGODB_URI = process.env.MONGO_URL || process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/careline";
+const JWT_SECRET = process.env.JWT_SECRET || "careline-secret";
+
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 
 const __dirnamePath = path.dirname(fileURLToPath(import.meta.url));
 const CARELINE_ROOT = path.join(__dirnamePath, "..", "..");
@@ -357,6 +371,7 @@ app.post("/api/auth/signup/verify", async (req, res) => {
   await user.save();
   otpStore.delete(mobile);
 
+<<<<<<< HEAD
   const token = crypto.randomBytes(18).toString("base64url");
   const isDoctorPending = user.role === "doctor" && user.status !== "active";
   return res.json({
@@ -365,6 +380,21 @@ app.post("/api/auth/signup/verify", async (req, res) => {
     token,
     user: publicUser(user.toObject()),
   });
+=======
+  // ✅ NEW improved code
+const token = jwt.sign(
+  { id: user._id, role: user.role },
+  JWT_SECRET,
+  { expiresIn: "7d" }
+);
+const isDoctorPending = user.role === "doctor" && user.status !== "active";
+return res.json({
+  ok: true,
+  message: isDoctorPending ? "Account created (pending admin approval)" : "Account created",
+  token,
+  user: publicUser(user.toObject()),
+});
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 });
 
 // ---- Login ----
@@ -399,8 +429,18 @@ app.post("/api/auth/login", async (req, res) => {
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return res.status(401).json({ ok: false, error: "INVALID_CREDENTIALS", message: "Invalid credentials" });
 
+<<<<<<< HEAD
   const token = crypto.randomBytes(18).toString("base64url");
   return res.json({ ok: true, message: "Logged in", token, user: publicUser(user.toObject()) });
+=======
+  // ✅ NEW improved code
+    const token = jwt.sign(
+        { id: user._id, role: user.role },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+    );
+    return res.json({ ok: true, message: "Logged in", token, user: publicUser(user.toObject()) });
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 });
 
 // ---- Public: list / search approved doctors ----
@@ -615,9 +655,20 @@ app.get("/api/queue", async (req, res) => {
 
 // POST /api/admin/queue/assign - Assign token (Admin Only)
 const AssignTokenSchema = z.object({
+<<<<<<< HEAD
   patientId: z.string().min(1),
   reason: z.string().optional(),
   clinicId: z.string().optional()
+=======
+  patientId: z.string().optional(),
+  patientName: z.string().optional(),
+  patientMobile: z.string().optional(),
+  reason: z.string().optional(),
+  clinicId: z.string().optional(),
+  doctorId: z.string().optional()
+}).refine(data => data.patientId || (data.patientName && data.patientMobile), {
+  message: "Either patientId or both patientName and patientMobile must be provided"
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 });
 
 app.post("/api/admin/queue/assign", async (req, res) => {
@@ -625,9 +676,33 @@ app.post("/api/admin/queue/assign", async (req, res) => {
   const parsed = AssignTokenSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ ok: false, error: "VALIDATION_ERROR", details: parsed.error.flatten() });
 
+<<<<<<< HEAD
   const { patientId, reason, clinicId } = parsed.data;
   if (!clinicId) return res.status(400).json({ ok: false, error: "MISSING_CLINIC_ID" });
 
+=======
+  const { reason, clinicId, doctorId, patientName, patientMobile } = parsed.data;
+  let patientId = parsed.data.patientId;
+  
+  if (!clinicId) return res.status(400).json({ ok: false, error: "MISSING_CLINIC_ID" });
+
+  if (!patientId && patientName && patientMobile) {
+    let existingUser = await User.findOne({ mobile: patientMobile, role: 'patient' });
+    if (!existingUser) {
+      existingUser = new User({
+        _id: makeId(),
+        role: 'patient',
+        fullName: patientName,
+        mobile: patientMobile,
+        passwordHash: await bcrypt.hash(makeId(), 10),
+        status: 'active'
+      });
+      await existingUser.save();
+    }
+    patientId = existingUser._id;
+  }
+
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
   const activeQueueItems = await Queue.find({ stage: { $nin: ['completed', 'no-show'] } }).lean();
   const activeApptIds = activeQueueItems.map(q => String(q.apptId));
 
@@ -648,6 +723,7 @@ app.post("/api/admin/queue/assign", async (req, res) => {
   const admin = await User.findById(clinicId).lean();
   const location = admin?.profile?.clinicName || 'CareLine Clinic';
 
+<<<<<<< HEAD
   const clinicActiveAppts = await Appointment.find({ clinicId, _id: { $in: activeApptIds } }).lean();
   const activeTokens = new Set(clinicActiveAppts.map(a => Number(a.token)));
 
@@ -655,13 +731,25 @@ app.post("/api/admin/queue/assign", async (req, res) => {
   while (activeTokens.has(nextToken)) {
     nextToken++;
   }
+=======
+  const todayDate = new Date().toISOString().slice(0, 10);
+  const todayAppts = await Appointment.find({ clinicId, date: todayDate }).lean();
+  const todayTokens = todayAppts.map(a => Number(a.token) || 0);
+  const nextToken = todayTokens.length > 0 ? Math.max(...todayTokens) + 1 : 1;
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
   
   const apptId = makeId();
   const newAppt = new Appointment({
     _id: apptId,
     patientId,
     clinicId,
+<<<<<<< HEAD
     token: nextToken,
+=======
+    doctorId: doctorId || undefined,
+    token: nextToken,
+    date: todayDate,
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     reason: reason || 'Walk-in Consultation',
     location: location,
@@ -826,7 +914,19 @@ app.post("/api/patient/book", async (req, res) => {
   const clinic = clinicId ? await User.findById(clinicId).lean() : null;
 
   const targetDate = date || new Date().toISOString().slice(0, 10);
+<<<<<<< HEAD
   const todayAppts = await Appointment.find({ date: targetDate }).lean();
+=======
+  
+  let apptQuery = { date: targetDate };
+  if (clinicId) {
+    apptQuery.clinicId = clinicId;
+  } else if (doctorId) {
+    apptQuery.doctorId = doctorId;
+  }
+  
+  const todayAppts = await Appointment.find(apptQuery).lean();
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
   const todayTokens = todayAppts.map(a => Number(a.token) || 0);
   const nextToken = todayTokens.length > 0 ? Math.max(...todayTokens) + 1 : 1;
 
@@ -1050,9 +1150,15 @@ app.get("/api/dashboard/stats", async (req, res) => {
     const activeDocs = new Set(clinicAppts.map(a => a.doctorId)).size;
 
     return res.json({ ok: true, stats: {
+<<<<<<< HEAD
       kpi1: `${revenue}`, kpi1n: 'Revenue Today',
       kpi2: `${clinicQueue.length}`, kpi2n: 'Patients in Queue',
       kpi3: `${activeDocs}`, kpi3n: 'Active Doctors'
+=======
+      kpi1: `${revenue}`, kpi1l: 'Revenue', kpi1n: 'Today',
+      kpi2: `${clinicQueue.length}`, kpi2l: 'Queue', kpi2n: 'Patients Waiting',
+      kpi3: `${activeDocs}`, kpi3l: 'Doctors', kpi3n: 'Active Today'
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
     }});
   }
 
@@ -1062,9 +1168,15 @@ app.get("/api/dashboard/stats", async (req, res) => {
     const doctorQueue = await Queue.find({ apptId: { $in: apptIds } }).lean();
 
     return res.json({ ok: true, stats: {
+<<<<<<< HEAD
       kpi1: `${doctorAppts.length}`, kpi1n: 'Total Today',
       kpi2: `${doctorQueue.filter(q => q.stage === 'in-queue' || q.stage === 'calling').length}`, kpi2n: 'Waiting',
       kpi3: `${doctorQueue.filter(q => q.stage === 'completed').length}`, kpi3n: 'Completed Today'
+=======
+      kpi1: `${doctorAppts.length}`, kpi1l: 'Consultations', kpi1n: 'Total Today',
+      kpi2: `${doctorQueue.filter(q => q.stage === 'in-queue' || q.stage === 'calling').length}`, kpi2l: 'Waiting', kpi2n: 'In Queue',
+      kpi3: `${doctorQueue.filter(q => q.stage === 'completed').length}`, kpi3l: 'Completed', kpi3n: 'Patients seen'
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
     }});
   }
 
@@ -1082,9 +1194,15 @@ app.get("/api/dashboard/stats", async (req, res) => {
     }
 
     return res.json({ ok: true, stats: {
+<<<<<<< HEAD
       kpi1: `${upcoming.length}`, kpi1n: 'Upcoming Visits',
       kpi2: kpi2, kpi2n: 'Active Token',
       kpi3: patientAppts.length, kpi3n: 'Total Visits'
+=======
+      kpi1: `${upcoming.length}`, kpi1l: 'Appointments', kpi1n: 'Upcoming',
+      kpi2: kpi2, kpi2l: 'Active Token', kpi2n: 'Current Status',
+      kpi3: patientAppts.length, kpi3l: 'History', kpi3n: 'Total Visits'
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
     }});
   }
 
@@ -1177,6 +1295,139 @@ app.post("/api/doctor/queue/delay", async (req, res) => {
   res.json({ ok: true, message: `Queue delayed by ${delayMinutes} mins`, totalDelay: doc.value[userId] });
 });
 
+<<<<<<< HEAD
+=======
+// ---- GET /api/messages/contacts ----
+app.get("/api/messages/contacts", async (req, res) => {
+  const { userId } = req.query;
+  if (!userId) return res.status(400).json({ ok: false, error: "MISSING_USER_ID" });
+
+  const user = await User.findById(userId).lean();
+  if (!user) return res.status(404).json({ ok: false, error: "USER_NOT_FOUND" });
+
+  const contactIds = new Set();
+
+  // 1. Find contacts from appointments
+  if (user.role === 'patient') {
+    const appts = await Appointment.find({ patientId: userId }).lean();
+    appts.forEach(a => {
+      if (a.doctorId) contactIds.add(String(a.doctorId));
+      if (a.clinicId) contactIds.add(String(a.clinicId));
+    });
+  } else if (user.role === 'doctor') {
+    const appts = await Appointment.find({ doctorId: userId }).lean();
+    appts.forEach(a => {
+      if (a.patientId) contactIds.add(String(a.patientId));
+    });
+  } else if (user.role === 'admin' || user.role === 'support') {
+    const clinicId = userId;
+    const appts = await Appointment.find({ clinicId }).lean();
+    appts.forEach(a => {
+      if (a.patientId) contactIds.add(String(a.patientId));
+      if (a.doctorId) contactIds.add(String(a.doctorId));
+    });
+  }
+
+  // 2. Find contacts from messages history
+  const chattedSenders = await Message.distinct("senderId", { receiverId: userId });
+  const chattedReceivers = await Message.distinct("receiverId", { senderId: userId });
+  chattedSenders.forEach(id => contactIds.add(String(id)));
+  chattedReceivers.forEach(id => contactIds.add(String(id)));
+
+  // Exclude self if present
+  contactIds.delete(String(userId));
+
+  const contactList = Array.from(contactIds);
+  const contactUsers = await User.find({ _id: { $in: contactList } }).lean();
+
+  const enrichedContacts = await Promise.all(contactUsers.map(async (c) => {
+    const unreadCount = await Message.countDocuments({ senderId: c._id, receiverId: userId, read: false });
+    const lastMsg = await Message.findOne({
+      $or: [
+        { senderId: userId, receiverId: c._id },
+        { senderId: c._id, receiverId: userId }
+      ]
+    }).sort({ createdAt: -1 }).lean();
+
+    let subLabel = null;
+    if (c.role === 'doctor') subLabel = c.profile?.specialization || 'Doctor';
+    else if (c.role === 'admin') subLabel = c.profile?.clinicName || 'Clinic Admin';
+    else if (c.role === 'patient') subLabel = 'Patient';
+    else subLabel = 'Staff';
+
+    return {
+      id: c._id,
+      fullName: c.fullName,
+      role: c.role,
+      subLabel,
+      unreadCount,
+      lastMessage: lastMsg ? { content: lastMsg.content, createdAt: lastMsg.createdAt } : null
+    };
+  }));
+
+  // Sort contacts by last message time (most recent first)
+  enrichedContacts.sort((a, b) => {
+    const timeA = a.lastMessage ? new Date(a.lastMessage.createdAt).getTime() : 0;
+    const timeB = b.lastMessage ? new Date(b.lastMessage.createdAt).getTime() : 0;
+    return timeB - timeA;
+  });
+
+  res.json({ ok: true, contacts: enrichedContacts });
+});
+
+// ---- GET /api/messages/history ----
+app.get("/api/messages/history", async (req, res) => {
+  const { user1, user2, viewerId } = req.query;
+  if (!user1 || !user2) return res.status(400).json({ ok: false, error: "MISSING_USER_IDS" });
+
+  // Fetch history
+  const messages = await Message.find({
+    $or: [
+      { senderId: user1, receiverId: user2 },
+      { senderId: user2, receiverId: user1 }
+    ]
+  }).sort({ createdAt: 1 }).lean();
+
+  // Mark incoming messages as read
+  const markAsReadRecipient = viewerId || user1;
+  const markAsReadSender = (markAsReadRecipient === user1) ? user2 : user1;
+  
+  await Message.updateMany(
+    { senderId: markAsReadSender, receiverId: markAsReadRecipient, read: false },
+    { read: true }
+  );
+
+  res.json({ ok: true, messages: messages.map(m => ({ ...m, id: m._id })) });
+});
+
+// ---- POST /api/messages/send ----
+const SendMessageSchema = z.object({
+  senderId: z.string().min(1),
+  receiverId: z.string().min(1),
+  content: z.string().trim().min(1)
+});
+
+app.post("/api/messages/send", async (req, res) => {
+  const parsed = SendMessageSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ ok: false, error: "VALIDATION_ERROR", details: parsed.error.flatten() });
+
+  const { senderId, receiverId, content } = parsed.data;
+
+  const messageId = makeId();
+  const newMessage = new Message({
+    _id: messageId,
+    senderId,
+    receiverId,
+    content,
+    createdAt: new Date(),
+    read: false
+  });
+
+  await newMessage.save();
+  res.json({ ok: true, message: { ...newMessage.toObject(), id: messageId } });
+});
+
+>>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 app.get("/", (_req, res) => {
   res.redirect("/index.html");
 });
