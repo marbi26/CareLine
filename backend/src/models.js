@@ -55,8 +55,6 @@ const systemStateSchema = new mongoose.Schema({
   value: { type: mongoose.Schema.Types.Mixed, default: {} }
 });
 
-<<<<<<< HEAD
-=======
 const messageSchema = new mongoose.Schema({
   _id: { type: String },
   senderId: { type: String, ref: 'User', required: true },
@@ -66,13 +64,9 @@ const messageSchema = new mongoose.Schema({
   read: { type: Boolean, default: false }
 });
 
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 export const User = mongoose.model('User', userSchema);
 export const Appointment = mongoose.model('Appointment', appointmentSchema);
 export const Queue = mongoose.model('Queue', queueSchema);
 export const Payment = mongoose.model('Payment', paymentSchema);
 export const SystemState = mongoose.model('SystemState', systemStateSchema);
-<<<<<<< HEAD
-=======
 export const Message = mongoose.model('Message', messageSchema);
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e

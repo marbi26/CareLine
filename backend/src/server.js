@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 import jwt from "jsonwebtoken";
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 import express from "express";
 import cors from "cors";
 import path from "path";
@@ -14,11 +11,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import twilio from "twilio";
-<<<<<<< HEAD
-import { User, Appointment, Queue, Payment, SystemState } from "./models.js";
-=======
 import { User, Appointment, Queue, Payment, SystemState, Message } from "./models.js";
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 
 dotenv.config();
 
@@ -33,13 +26,9 @@ app.use(express.json({ limit: "5mb" }));
 
 const PORT = Number(process.env.PORT || 5050);
 const BIND_HOST = process.env.BIND_HOST || "0.0.0.0";
-<<<<<<< HEAD
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/careline";
-=======
 const MONGODB_URI = process.env.MONGO_URL || process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/careline";
 const JWT_SECRET = process.env.JWT_SECRET || "careline-secret";
 
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 
 const __dirnamePath = path.dirname(fileURLToPath(import.meta.url));
 const CARELINE_ROOT = path.join(__dirnamePath, "..", "..");
@@ -371,16 +360,6 @@ app.post("/api/auth/signup/verify", async (req, res) => {
   await user.save();
   otpStore.delete(mobile);
 
-<<<<<<< HEAD
-  const token = crypto.randomBytes(18).toString("base64url");
-  const isDoctorPending = user.role === "doctor" && user.status !== "active";
-  return res.json({
-    ok: true,
-    message: isDoctorPending ? "Account created (pending admin approval)" : "Account created",
-    token,
-    user: publicUser(user.toObject()),
-  });
-=======
   // ✅ NEW improved code
 const token = jwt.sign(
   { id: user._id, role: user.role },
@@ -394,7 +373,6 @@ return res.json({
   token,
   user: publicUser(user.toObject()),
 });
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 });
 
 // ---- Login ----
@@ -429,10 +407,6 @@ app.post("/api/auth/login", async (req, res) => {
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return res.status(401).json({ ok: false, error: "INVALID_CREDENTIALS", message: "Invalid credentials" });
 
-<<<<<<< HEAD
-  const token = crypto.randomBytes(18).toString("base64url");
-  return res.json({ ok: true, message: "Logged in", token, user: publicUser(user.toObject()) });
-=======
   // ✅ NEW improved code
     const token = jwt.sign(
         { id: user._id, role: user.role },
@@ -440,7 +414,6 @@ app.post("/api/auth/login", async (req, res) => {
         { expiresIn: "7d" }
     );
     return res.json({ ok: true, message: "Logged in", token, user: publicUser(user.toObject()) });
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 });
 
 // ---- Public: list / search approved doctors ----
@@ -655,11 +628,6 @@ app.get("/api/queue", async (req, res) => {
 
 // POST /api/admin/queue/assign - Assign token (Admin Only)
 const AssignTokenSchema = z.object({
-<<<<<<< HEAD
-  patientId: z.string().min(1),
-  reason: z.string().optional(),
-  clinicId: z.string().optional()
-=======
   patientId: z.string().optional(),
   patientName: z.string().optional(),
   patientMobile: z.string().optional(),
@@ -668,7 +636,6 @@ const AssignTokenSchema = z.object({
   doctorId: z.string().optional()
 }).refine(data => data.patientId || (data.patientName && data.patientMobile), {
   message: "Either patientId or both patientName and patientMobile must be provided"
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 });
 
 app.post("/api/admin/queue/assign", async (req, res) => {
@@ -676,11 +643,6 @@ app.post("/api/admin/queue/assign", async (req, res) => {
   const parsed = AssignTokenSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ ok: false, error: "VALIDATION_ERROR", details: parsed.error.flatten() });
 
-<<<<<<< HEAD
-  const { patientId, reason, clinicId } = parsed.data;
-  if (!clinicId) return res.status(400).json({ ok: false, error: "MISSING_CLINIC_ID" });
-
-=======
   const { reason, clinicId, doctorId, patientName, patientMobile } = parsed.data;
   let patientId = parsed.data.patientId;
   
@@ -702,7 +664,6 @@ app.post("/api/admin/queue/assign", async (req, res) => {
     patientId = existingUser._id;
   }
 
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
   const activeQueueItems = await Queue.find({ stage: { $nin: ['completed', 'no-show'] } }).lean();
   const activeApptIds = activeQueueItems.map(q => String(q.apptId));
 
@@ -723,33 +684,19 @@ app.post("/api/admin/queue/assign", async (req, res) => {
   const admin = await User.findById(clinicId).lean();
   const location = admin?.profile?.clinicName || 'CareLine Clinic';
 
-<<<<<<< HEAD
-  const clinicActiveAppts = await Appointment.find({ clinicId, _id: { $in: activeApptIds } }).lean();
-  const activeTokens = new Set(clinicActiveAppts.map(a => Number(a.token)));
-
-  let nextToken = 1;
-  while (activeTokens.has(nextToken)) {
-    nextToken++;
-  }
-=======
   const todayDate = new Date().toISOString().slice(0, 10);
   const todayAppts = await Appointment.find({ clinicId, date: todayDate }).lean();
   const todayTokens = todayAppts.map(a => Number(a.token) || 0);
   const nextToken = todayTokens.length > 0 ? Math.max(...todayTokens) + 1 : 1;
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
   
   const apptId = makeId();
   const newAppt = new Appointment({
     _id: apptId,
     patientId,
     clinicId,
-<<<<<<< HEAD
-    token: nextToken,
-=======
     doctorId: doctorId || undefined,
     token: nextToken,
     date: todayDate,
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     reason: reason || 'Walk-in Consultation',
     location: location,
@@ -856,6 +803,42 @@ app.get("/api/clinics/:clinicId/doctors", async (req, res) => {
   return res.json({ ok: true, clinic: { id: clinic._id, name: clinic.profile.clinicName, location: clinic.profile.clinicLocation }, doctors });
 });
 
+// ---- GET /api/doctors/:doctorId/profile ----
+app.get("/api/doctors/:doctorId/profile", async (req, res) => {
+  const { doctorId } = req.params;
+  const doctor = await User.findOne({ _id: doctorId, role: "doctor", status: "active" }).lean();
+  if (!doctor) return res.status(404).json({ ok: false, error: "NOT_FOUND", message: "Doctor not found" });
+
+  const p = doctor.profile || {};
+  const clinicName = (p.clinicAssociation || "").trim().toLowerCase();
+  const clinic = clinicName
+    ? await User.findOne({ role: "admin", "profile.clinicName": { $regex: `^${clinicName}$`, $options: "i" } }).lean()
+    : null;
+
+  return res.json({
+    ok: true,
+    doctor: {
+      id: doctor._id,
+      fullName: doctor.fullName,
+      specialization: p.specialization || "General Physician",
+      bio: p.bio || null,
+      clinicAssociation: p.clinicAssociation || null,
+      availability: "Mon–Sat, 9:00 AM – 6:00 PM",
+      clinic: clinic ? {
+        id: clinic._id,
+        name: clinic.profile?.clinicName || null,
+        location: clinic.profile?.clinicLocation || null,
+        picture: clinic.profile?.clinicPicture
+          ? (clinic.profile.clinicPicture.startsWith("/uploads")
+              ? clinic.profile.clinicPicture
+              : clinic.profile.clinicPicture)
+          : null,
+        consultationFee: clinic.profile?.consultationFee || null,
+      } : null
+    }
+  });
+});
+
 // ---- GET /api/doctors/:doctorId/slots ----
 app.get("/api/doctors/:doctorId/slots", async (req, res) => {
   const { doctorId } = req.params;
@@ -914,9 +897,6 @@ app.post("/api/patient/book", async (req, res) => {
   const clinic = clinicId ? await User.findById(clinicId).lean() : null;
 
   const targetDate = date || new Date().toISOString().slice(0, 10);
-<<<<<<< HEAD
-  const todayAppts = await Appointment.find({ date: targetDate }).lean();
-=======
   
   let apptQuery = { date: targetDate };
   if (clinicId) {
@@ -926,7 +906,6 @@ app.post("/api/patient/book", async (req, res) => {
   }
   
   const todayAppts = await Appointment.find(apptQuery).lean();
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
   const todayTokens = todayAppts.map(a => Number(a.token) || 0);
   const nextToken = todayTokens.length > 0 ? Math.max(...todayTokens) + 1 : 1;
 
@@ -1150,15 +1129,9 @@ app.get("/api/dashboard/stats", async (req, res) => {
     const activeDocs = new Set(clinicAppts.map(a => a.doctorId)).size;
 
     return res.json({ ok: true, stats: {
-<<<<<<< HEAD
-      kpi1: `${revenue}`, kpi1n: 'Revenue Today',
-      kpi2: `${clinicQueue.length}`, kpi2n: 'Patients in Queue',
-      kpi3: `${activeDocs}`, kpi3n: 'Active Doctors'
-=======
       kpi1: `${revenue}`, kpi1l: 'Revenue', kpi1n: 'Today',
       kpi2: `${clinicQueue.length}`, kpi2l: 'Queue', kpi2n: 'Patients Waiting',
       kpi3: `${activeDocs}`, kpi3l: 'Doctors', kpi3n: 'Active Today'
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
     }});
   }
 
@@ -1168,15 +1141,9 @@ app.get("/api/dashboard/stats", async (req, res) => {
     const doctorQueue = await Queue.find({ apptId: { $in: apptIds } }).lean();
 
     return res.json({ ok: true, stats: {
-<<<<<<< HEAD
-      kpi1: `${doctorAppts.length}`, kpi1n: 'Total Today',
-      kpi2: `${doctorQueue.filter(q => q.stage === 'in-queue' || q.stage === 'calling').length}`, kpi2n: 'Waiting',
-      kpi3: `${doctorQueue.filter(q => q.stage === 'completed').length}`, kpi3n: 'Completed Today'
-=======
       kpi1: `${doctorAppts.length}`, kpi1l: 'Consultations', kpi1n: 'Total Today',
       kpi2: `${doctorQueue.filter(q => q.stage === 'in-queue' || q.stage === 'calling').length}`, kpi2l: 'Waiting', kpi2n: 'In Queue',
       kpi3: `${doctorQueue.filter(q => q.stage === 'completed').length}`, kpi3l: 'Completed', kpi3n: 'Patients seen'
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
     }});
   }
 
@@ -1194,15 +1161,9 @@ app.get("/api/dashboard/stats", async (req, res) => {
     }
 
     return res.json({ ok: true, stats: {
-<<<<<<< HEAD
-      kpi1: `${upcoming.length}`, kpi1n: 'Upcoming Visits',
-      kpi2: kpi2, kpi2n: 'Active Token',
-      kpi3: patientAppts.length, kpi3n: 'Total Visits'
-=======
       kpi1: `${upcoming.length}`, kpi1l: 'Appointments', kpi1n: 'Upcoming',
       kpi2: kpi2, kpi2l: 'Active Token', kpi2n: 'Current Status',
       kpi3: patientAppts.length, kpi3l: 'History', kpi3n: 'Total Visits'
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
     }});
   }
 
@@ -1295,8 +1256,6 @@ app.post("/api/doctor/queue/delay", async (req, res) => {
   res.json({ ok: true, message: `Queue delayed by ${delayMinutes} mins`, totalDelay: doc.value[userId] });
 });
 
-<<<<<<< HEAD
-=======
 // ---- GET /api/messages/contacts ----
 app.get("/api/messages/contacts", async (req, res) => {
   const { userId } = req.query;
@@ -1427,7 +1386,6 @@ app.post("/api/messages/send", async (req, res) => {
   res.json({ ok: true, message: { ...newMessage.toObject(), id: messageId } });
 });
 
->>>>>>> 54bca8b6e8320de0cee1cd7cf0866dc4039e8e8e
 app.get("/", (_req, res) => {
   res.redirect("/index.html");
 });
