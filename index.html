@@ -2432,21 +2432,6 @@
       }
     }
 
-    .doc-section {
-      padding: 16px;
-      border-radius: 18px;
-      border: 1px solid var(--glass-border);
-      background: var(--input-bg);
-      margin-bottom: 12px;
-    }
-
-    .doc-section h4 {
-      font-family: var(--font-head);
-      font-size: 1.05rem;
-      margin-bottom: 8px;
-      color: var(--teal-100);
-    }
-
     /* ─── Chat System ─── */
     .chat-container {
       display: flex;
@@ -3739,9 +3724,6 @@
         <button data-view="admin-reports" onclick="dashView('admin-reports')">
           <span>Reports</span><span class="badge">Metrics</span>
         </button>
-        <button data-view="admin-docs" onclick="dashView('admin-docs')">
-          <span>Documentation</span><span class="badge">Docs</span>
-        </button>
         <button data-view="messages" onclick="dashView('messages')">
           <span>Messages</span><span class="badge">Chat</span>
         </button>
@@ -3824,7 +3806,6 @@
       if (g('adminDoctorsView')) g('adminDoctorsView').classList.remove('show');
       if (g('adminServicesView')) g('adminServicesView').classList.remove('show');
       if (g('adminReportsView')) g('adminReportsView').classList.remove('show');
-      if (g('adminDocsView')) g('adminDocsView').classList.remove('show');
       if (g('adminQueueView')) g('adminQueueView').classList.remove('show');
       if (g('settingsView')) g('settingsView').classList.remove('show');
 
@@ -3906,13 +3887,6 @@
         ensureAdminViewsAttached();
         g('adminReportsView').classList.add('show');
         fetchAdminFinancialReports();
-        return;
-      } else if (role === 'admin' && view === 'admin-docs') {
-        g('dashTitle').textContent = 'Administrative Documentation';
-        g('dashSub').textContent = 'Operational rules and system guidelines.';
-        g('dashDefault').style.display = 'none';
-        ensureAdminViewsAttached();
-        g('adminDocsView').classList.add('show');
         return;
       } else if (view === 'appointments') {
         if (role === 'patient') {
@@ -4598,27 +4572,6 @@
         <div class="list" id="fin-recent-list">
           <div class="subtle">No transactions found.</div>
         </div>
-      </div>
-    `;
-        main.appendChild(v);
-      }
-
-      if (!g('adminDocsView')) {
-        const v = document.createElement('div');
-        v.id = 'adminDocsView';
-        v.className = 'patient-view-panel';
-        v.innerHTML = `
-      <div class="doc-section">
-        <h4>1. Doctor Onboarding Workflow</h4>
-        <p>All newly registered doctors are placed in a "Pending Review" state. The clinic administrator must verify their Medical Registration Number with the state board before clicking "Verify Profile" in the Manage Doctors tab. Only verified doctors appear in the Patient's search results.</p>
-      </div>
-      <div class="doc-section">
-        <h4>2. Queue Management Rules</h4>
-        <p>The queue is strictly First-In-First-Out (FIFO) unless a patient is marked as an Emergency by the reception. If a patient is a "No Show" after 3 calls, their token is moved to the end of the current hour's queue.</p>
-      </div>
-      <div class="doc-section">
-        <h4>3. System Configuration</h4>
-        <p>Global settings like Consultation Fees apply to general physicians. Specialists may override these fees in their individual profiles. Disabling the Pharmacy or Laboratory module hides those features from the Patient Interface immediately.</p>
       </div>
     `;
         main.appendChild(v);
