@@ -3839,21 +3839,24 @@
         ensurePatientViewsAttached();
         g('patientPaymentsView').classList.add('show');
         return;
-      } else if (role === 'doctor' && view === 'doc-queue') {
+        } else if (role === 'doctor' && view === 'doc-queue') {
         g('dashTitle').textContent = 'Live queue management';
         g('dashSub').textContent = 'Call next, mark in-consult, complete, or no-show.';
+        g('dashDefault').style.display = 'none';
         setDoctorWorkbench(true);
         docRender('queue');
         return;
       } else if (role === 'doctor' && view === 'doc-rx') {
         g('dashTitle').textContent = 'Prescription generation';
         g('dashSub').textContent = 'Generate and save prescriptions for selected patient.';
+        g('dashDefault').style.display = 'none';
         setDoctorWorkbench(true);
         docRender('rx');
         return;
       } else if (role === 'doctor' && view === 'doc-history') {
         g('dashTitle').textContent = 'Patient medical history';
         g('dashSub').textContent = 'Search patient and view past visits & prescriptions.';
+        g('dashDefault').style.display = 'none';
         setDoctorWorkbench(true);
         docRender('history');
         return;
@@ -4937,7 +4940,7 @@
     }
 
     /* ─── DOCTOR: STATE + STORAGE ─── */
-    const DOC_STORAGE_KEY = 'careline_doc_records_v1';
+    const DOC_STORAGE_KEY = 'careline_doc_records_v1_' + (authUser?.id || 'unknown');
     const DOC_STATE_KEY = 'careline_doc_state_v1';
 
     function docReadStore() {
@@ -5006,7 +5009,44 @@
       </div>
     </div>
   `;
-
+      html += `
+    <div style="background:linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); padding:24px; border-radius:16px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+      <h4 style="margin:0 0 16px 0; font-family:var(--font-head); font-weight:700; color:var(--teal-200); display:flex; align-items:center; gap:8px;">
+        <span style="font-size:1.2rem;">⚡</span> Quick Actions
+      </h4>
+      <div style="display:flex; flex-wrap:wrap; gap:12px;">
+        <button class="btnTiny primary" type="button" onclick="saveSettings()">
+          💾 Save Changes
+        </button>
+        <button class="btnTiny" type="button" onclick="showToast('Refreshing your session...','🔄'); location.reload();">
+          🔄 Refresh App
+        </button>
+        <button class="btnTiny" type="button"
+          onclick="if(confirm('Are you sure you want to log out?')) { localStorage.removeItem('careline_user'); location.reload(); }"
+          style="border-color:rgba(255,100,100,0.4); color:#ff8888;">
+          🚪 Log Out
+        </button>
+        ${authUser.role === 'patient' ? `
+        <button class="btnTiny" type="button" onclick="openBookingModal()">
+          📅 Book Appointment
+        </button>` : ''}
+        ${authUser.role === 'doctor' ? `
+        <button class="btnTiny" type="button" onclick="dashView('doc-daily')">
+          📋 Daily Schedule
+        </button>
+        <button class="btnTiny" type="button" onclick="dashView('doc-rx')">
+          💊 Write Prescription
+        </button>` : ''}
+        ${authUser.role === 'admin' ? `
+        <button class="btnTiny" type="button" onclick="dashView('admin-queue')">
+          🏥 Manage Queue
+        </button>
+        <button class="btnTiny" type="button" onclick="dashView('admin-doctors')">
+          👨‍⚕️ Manage Doctors
+        </button>` : ''}
+      </div>
+    </div>
+  `;
       if (authUser.role === 'admin') {
         html += `
       <div style="background:linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); padding:24px; border-radius:16px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 8px 32px rgba(0,0,0,0.2);">
@@ -5123,6 +5163,26 @@
       </div>
     `;
       }
+        html += `
+    <div style="background:linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); padding:24px; border-radius:16px; border:1px solid rgba(255,80,80,0.15); box-shadow:0 8px 32px rgba(0,0,0,0.2); margin-top:4px;">
+      <h4 style="margin:0 0 16px 0; font-family:var(--font-head); font-weight:700; color:#ff8888; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:1.2rem;">🔐</span> Security
+      </h4>
+      <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+        <div class="form-group" style="margin:0;">
+          <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">New Password</label>
+          <input type="password" id="set-newpwd" placeholder="Leave blank to keep current"
+            style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 14px; border-radius:10px; width:220px; transition:all 0.3s ease;"
+            onfocus="this.style.borderColor='var(--teal-400)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)';" />
+        </div>
+        <button class="btnTiny" type="button"
+          style="margin-top:22px; border-color:rgba(255,80,80,0.4); color:#ff8888;"
+          onclick="settingsChangePassword()">
+          🔐 Update Password
+        </button>
+      </div>
+    </div>
+  `;
 
       content.innerHTML = html;
     }
@@ -5179,6 +5239,21 @@
         showToast(e.message || 'Failed to update settings.', '⚠️', true);
       }
     }
+    async function settingsChangePassword() {
+    const pwd = g('set-newpwd')?.value?.trim();
+    if (!pwd) { showToast('Enter a new password first.', '⚠️', true); return; }
+    if (pwd.length < 6) { showToast('Password must be at least 6 characters.', '⚠️', true); return; }
+    try {
+      await api('/api/user/update-profile', {
+        method: 'POST',
+        body: { userId: authUser.id, password: pwd }
+      });
+      showToast('Password updated successfully.', '✅');
+      g('set-newpwd').value = '';
+    } catch(e) {
+      showToast(e.message || 'Failed to update password.', '⚠️', true);
+    }
+  }
 
     function docEnsureState(reset = false) {
       let st = reset ? null : docReadState();
@@ -5290,7 +5365,7 @@
       const rightPane = g('docRightPane');
       if (!leftTitle || !rightTitle || !leftList || !rightPane) return;
 
-      if (mode === 'queue' || mode === 'daily') {
+        if (mode === 'queue' || mode === 'daily' || mode === 'rx' || mode === 'history') {
         try {
           const qUrl = '/api/queue?clinicId=' + (authUser.role === 'admin' ? authUser.id : '') + '&doctorId=' + (authUser.role === 'doctor' ? authUser.id : '');
           const data = await api(qUrl);
@@ -5316,9 +5391,12 @@
       const q = docFilterQ(g('docPatientSearch')?.value);
 
       if (mode === 'daily') {
+        const searchField = g('docPatientSearch')?.closest('.field');
+        if (searchField) searchField.style.display = '';
         leftTitle.textContent = 'Daily appointments';
         rightTitle.textContent = 'Patient snapshot';
-        const appts = st.appointments.filter(a => docMatches(a, q));
+        const selectedDate = g('docDay')?.value;
+        const appts = st.appointments.filter(a => docMatches(a, q) && (!selectedDate || a.date === selectedDate));
         leftList.innerHTML = appts.length ? appts.map(a => {
           const p = st.patients[a.patientId];
           const isSel = st.selectedApptId === a.id;
@@ -5340,12 +5418,14 @@
       }
 
       if (mode === 'queue') {
+        const searchField = g('docPatientSearch')?.closest('.field');
+        if (searchField) searchField.style.display = '';
         leftTitle.textContent = 'Live queue';
         rightTitle.textContent = 'Queue actions';
+                const selectedDate = g('docDay')?.value;
         const items = st.queue
           .map(qi => ({ qi, appt: docApptById(qi.apptId) }))
-          .filter(x => x.appt && docMatches(x.appt, q) && !['completed', 'no-show'].includes(x.qi.stage));
-
+          .filter(x => x.appt && docMatches(x.appt, q) && (!selectedDate || x.appt.date === selectedDate) && !['completed', 'no-show'].includes(x.qi.stage));
         leftList.innerHTML = items.length ? items.map(({ qi, appt }) => {
           const p = st.patients[appt.patientId];
           const isSel = st.selectedApptId === appt.id;
@@ -5368,9 +5448,12 @@
       }
 
       if (mode === 'rx') {
+        const searchField = g('docPatientSearch')?.closest('.field');
+        if (searchField) searchField.style.display = '';
         leftTitle.textContent = 'Select patient';
         rightTitle.textContent = 'Prescription';
-        const appts = st.appointments.filter(a => docMatches(a, q));
+        const selectedDate = g('docDay')?.value;
+        const appts = st.appointments.filter(a => docMatches(a, q) && (!selectedDate || a.date === selectedDate));
         leftList.innerHTML = appts.length ? appts.map(a => {
           const p = st.patients[a.patientId];
           const isSel = st.selectedApptId === a.id;
@@ -5390,10 +5473,12 @@
         return;
       }
 
-      if (mode === 'history') {
-        leftTitle.textContent = 'Patient search';
+        if (mode === 'history') {
+        leftTitle.textContent = 'My Patients';
         rightTitle.textContent = 'History';
-        leftList.innerHTML = docRenderPatientDirectoryHtml(q);
+        const searchField = g('docPatientSearch')?.closest('.field');
+        if (searchField) searchField.style.display = 'none';
+        leftList.innerHTML = docRenderMyPatientsHtml();
         rightPane.innerHTML = docRenderHistoryHtml();
         return;
       }
@@ -5775,14 +5860,15 @@
         const store = docReadStore();
         store.patients[rx.patientId] = store.patients[rx.patientId] || { name: rx.patientName, mobile: rx.patientMobile };
         store.visits.unshift({
-          id: 'visit_' + Date.now(),
-          createdAt: rx.createdAt,
-          patientId: rx.patientId,
-          token: rx.token,
-          reason: rx.reason,
-          notes: rx.notes,
-          prescription: rx
-        });
+        id: 'visit_' + Date.now(),
+        createdAt: rx.createdAt,
+        patientId: rx.patientId,
+        doctorId: authUser?.id || null,
+        token: rx.token,
+        reason: rx.reason,
+        notes: rx.notes,
+        prescription: rx
+      });
         docWriteStore(store);
         showToast('Prescription saved to medical history.', '✅');
         // Reset prescription inputs after successful submit
@@ -5844,6 +5930,35 @@
       });
       if (!filtered.length) return `<div class="subtle">No patients match your search.</div>`;
       return filtered.map(p => {
+        const isSel = st.selectedPatientId === p.id;
+        return `
+      <div class="queueItem" style="${isSel ? 'border-color: rgba(45,224,208,0.32); background: rgba(45,224,208,0.06);' : ''}">
+        <div>
+          <div class="pName">${escapeHtml(p.name)}</div>
+          <div class="pMeta">📱 ${escapeHtml(p.mobile || '—')} · ${escapeHtml(p.gender || '—')} · ${escapeHtml(p.age ?? '—')} yrs</div>
+        </div>
+        <div class="right">
+          <button class="btnTiny" type="button" onclick="docSelectPatient('${escapeJs(p.id)}')">Open</button>
+        </div>
+      </div>`;
+      }).join('');
+    }
+
+    function docRenderMyPatientsHtml() {
+      const st = window.__doc;
+      const store = docReadStore();
+      // Get unique patients from THIS doctor's saved visits only
+      const seen = {};
+      (store.visits || []).forEach(v => {
+        if (v.patientId && !seen[v.patientId]) {
+          seen[v.patientId] = st.patients[v.patientId] || { id: v.patientId, name: 'Patient' };
+        }
+      });
+      const myPatients = Object.values(seen);
+      if (!myPatients.length) {
+        return `<div class="subtle">No patients in your history yet. Save a prescription to add one.</div>`;
+      }
+      return myPatients.map(p => {
         const isSel = st.selectedPatientId === p.id;
         return `
       <div class="queueItem" style="${isSel ? 'border-color: rgba(45,224,208,0.32); background: rgba(45,224,208,0.06);' : ''}">
