@@ -227,6 +227,21 @@
       justify-content: center;
       font-size: 18px;
       box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+      overflow: hidden;
+    }
+
+    .brand-badge .icon-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .sidebar-logo {
+      height: 32px;
+      width: auto;
+      object-fit: contain;
+      display: block;
     }
 
     .brand-badge span {
@@ -2699,7 +2714,7 @@
     <!-- Brand -->
     <div class="brand">
       <div class="brand-badge">
-        <div class="icon-wrap">🏥</div>
+        <div class="icon-wrap"><img src="assets/logo.png" alt="CareLine Logo" /></div>
         <span>CareLine</span>
       </div>
       <p class="brand-tagline">Smart Clinic Management &amp; Real-Time Appointment Tracking</p>
@@ -2875,7 +2890,7 @@
     <div class="dashShell">
       <aside class="side">
         <div class="sTitle">
-          <span style="font-family:var(--font-head);font-weight:900;">CareLine</span>
+          <img src="assets/logo.png" alt="CareLine" class="sidebar-logo" />
           <span class="badge ok" id="roleChip">Role</span>
         </div>
         <div class="who">
@@ -3677,9 +3692,6 @@
       <button data-view="payments" onclick="dashView('payments')">
         <span>Payments</span><span class="badge">Billing</span>
       </button>
-      <button data-view="messages" onclick="dashView('messages')">
-        <span>Messages</span><span class="badge">Chat</span>
-      </button>
       <button data-view="settings" onclick="dashView('settings')">
         <span>Settings</span><span class="badge">Profile</span>
       </button>`;
@@ -3701,9 +3713,6 @@
         <button data-view="doc-history" onclick="dashView('doc-history')">
           <span>Medical history</span><span class="badge">View</span>
         </button>
-        <button data-view="messages" onclick="dashView('messages')">
-          <span>Messages</span><span class="badge">Chat</span>
-        </button>
         <button data-view="settings" onclick="dashView('settings')">
           <span>Settings</span><span class="badge">Profile</span>
         </button>`;
@@ -3724,9 +3733,6 @@
         <button data-view="admin-reports" onclick="dashView('admin-reports')">
           <span>Reports</span><span class="badge">Metrics</span>
         </button>
-        <button data-view="messages" onclick="dashView('messages')">
-          <span>Messages</span><span class="badge">Chat</span>
-        </button>
         <button data-view="settings" onclick="dashView('settings')">
           <span>Settings</span><span class="badge">Profile</span>
         </button>`;
@@ -3740,9 +3746,6 @@
         </button>
         <button data-view="patients" onclick="dashView('patients')">
           <span>Patients</span><span class="badge">Records</span>
-        </button>
-        <button data-view="messages" onclick="dashView('messages')">
-          <span>Messages</span><span class="badge">Chat</span>
         </button>
         <button data-view="settings" onclick="dashView('settings')">
           <span>Settings</span><span class="badge">Profile</span>
