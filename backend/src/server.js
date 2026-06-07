@@ -176,22 +176,40 @@ app.get('/api/admin/reports/financial', async (req, res) => {
 
 // ---- Additional API: User profile updates ----
 app.post('/api/user/update-profile', async (req, res) => {
-  const { 
-    userId, 
-    fullName, 
-    mobile, 
-    email, 
-    password, 
-    consultationFee, 
-    clinicLocation, 
-    clinicName, 
-    clinicPicture, 
-    specialization, 
-    gender, 
-    bio, 
-    age, 
-    clinicAssociation 
+  const {
+    userId,
+    fullName,
+    mobile,
+    email,
+    password,
+    // Admin fields
+    consultationFee,
+    clinicLocation,
+    clinicName,
+    clinicPicture,
+    workingHours,
+    contactNumber,
+    licenseNo,
+    // Doctor fields
+    specialization,
+    gender,
+    bio,
+    clinicAssociation,
+    medicalRegistrationNumber,
+    experience,
+    availability,
+    // Patient fields
+    age,
+    bloodGroup,
+    allergies,
+    emergencyContact,
+    // Support fields
+    employeeId,
+    department,
+    shift,
+    supervisor,
   } = req.body;
+
   try {
     let user = await Patient.findById(userId);
     if (!user) user = await Doctor.findById(userId);
@@ -208,9 +226,12 @@ app.post('/api/user/update-profile', async (req, res) => {
     if (user.role === 'admin') {
       user.profile = {
         ...user.profile,
-        clinicName: clinicName || user.profile?.clinicName,
-        clinicLocation: clinicLocation || user.profile?.clinicLocation,
+        clinicName: clinicName !== undefined ? clinicName : user.profile?.clinicName,
+        clinicLocation: clinicLocation !== undefined ? clinicLocation : user.profile?.clinicLocation,
         consultationFee: consultationFee !== undefined ? Number(consultationFee) : user.profile?.consultationFee,
+        workingHours: workingHours !== undefined ? workingHours : user.profile?.workingHours,
+        contactNumber: contactNumber !== undefined ? contactNumber : user.profile?.contactNumber,
+        licenseNo: licenseNo !== undefined ? licenseNo : user.profile?.licenseNo,
       };
       if (clinicPicture) {
         if (clinicPicture.startsWith('data:image/')) {
@@ -223,16 +244,30 @@ app.post('/api/user/update-profile', async (req, res) => {
     } else if (user.role === 'doctor') {
       user.profile = {
         ...user.profile,
-        specialization: specialization || user.profile?.specialization,
-        clinicAssociation: clinicAssociation || clinicName || user.profile?.clinicAssociation,
-        gender: gender || user.profile?.gender,
-        bio: bio || user.profile?.bio
+        specialization: specialization !== undefined ? specialization : user.profile?.specialization,
+        clinicAssociation: clinicAssociation !== undefined ? clinicAssociation : (clinicName !== undefined ? clinicName : user.profile?.clinicAssociation),
+        gender: gender !== undefined ? gender : user.profile?.gender,
+        bio: bio !== undefined ? bio : user.profile?.bio,
+        medicalRegistrationNumber: medicalRegistrationNumber !== undefined ? medicalRegistrationNumber : user.profile?.medicalRegistrationNumber,
+        experience: experience !== undefined ? Number(experience) : user.profile?.experience,
+        availability: availability !== undefined ? availability : user.profile?.availability,
       };
     } else if (user.role === 'patient') {
       user.profile = {
         ...user.profile,
         age: age !== undefined ? Number(age) : user.profile?.age,
-        gender: gender || user.profile?.gender
+        gender: gender !== undefined ? gender : user.profile?.gender,
+        bloodGroup: bloodGroup !== undefined ? bloodGroup : user.profile?.bloodGroup,
+        allergies: allergies !== undefined ? allergies : user.profile?.allergies,
+        emergencyContact: emergencyContact !== undefined ? emergencyContact : user.profile?.emergencyContact,
+      };
+    } else if (user.role === 'support') {
+      user.profile = {
+        ...user.profile,
+        employeeId: employeeId !== undefined ? employeeId : user.profile?.employeeId,
+        department: department !== undefined ? department : user.profile?.department,
+        shift: shift !== undefined ? shift : user.profile?.shift,
+        supervisor: supervisor !== undefined ? supervisor : user.profile?.supervisor,
       };
     }
 
