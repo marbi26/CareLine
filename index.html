@@ -9,6 +9,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap"
     rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     :root {
       --bg: #f8fafc;
@@ -242,6 +243,15 @@
       width: auto;
       object-fit: contain;
       display: block;
+    }
+
+    /* ── Lucide Icons Sizing ── */
+    .r-icon i, .i-icon i, .r-icon svg, .i-icon svg {
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      vertical-align: middle;
+      stroke-width: 2px;
     }
 
     .brand-badge span {
@@ -2733,20 +2743,16 @@
 
         <span class="section-label">Your role</span>
         <div class="role-grid" id="login-role-grid">
-          <button class="role-btn active" data-role="patient" onclick="pickRole(this,'login')"><span
-              class="r-icon">🧑‍⚕️</span>Patient</button>
-          <button class="role-btn" data-role="doctor" onclick="pickRole(this,'login')"><span
-              class="r-icon">👨‍⚕️</span>Doctor</button>
-          <button class="role-btn" data-role="admin" onclick="pickRole(this,'login')"><span
-              class="r-icon">🏢</span>Admin / Reception</button>
-          <button class="role-btn" data-role="support" onclick="pickRole(this,'login')"><span
-              class="r-icon">🎧</span>Support Staff</button>
+          <button class="role-btn active" data-role="patient" onclick="pickRole(this,'login')"><span class="r-icon"><i data-lucide="user"></i></span>Patient</button>
+          <button class="role-btn" data-role="doctor" onclick="pickRole(this,'login')"><span class="r-icon"><i data-lucide="stethoscope"></i></span>Doctor</button>
+          <button class="role-btn" data-role="admin" onclick="pickRole(this,'login')"><span class="r-icon"><i data-lucide="building-2"></i></span>Admin / Reception</button>
+          <button class="role-btn" data-role="support" onclick="pickRole(this,'login')"><span class="r-icon"><i data-lucide="headphones"></i></span>Support Staff</button>
         </div>
 
         <div class="form-group">
           <label for="l-id">Mobile Number / Email</label>
           <div class="input-wrap">
-            <span class="i-icon">📱</span>
+            <span class="i-icon"><i data-lucide="smartphone"></i></span>
             <input type="text" id="l-id" placeholder="Enter mobile or email" autocomplete="username" />
           </div>
           <span class="field-error" id="err-l-id">Please enter your mobile number or email.</span>
@@ -2755,7 +2761,7 @@
         <div class="form-group">
           <label for="l-pw">Password</label>
           <div class="input-wrap">
-            <span class="i-icon">🔒</span>
+            <span class="i-icon"><i data-lucide="lock"></i></span>
             <input type="password" id="l-pw" placeholder="Enter your password" autocomplete="current-password" />
             <button class="pw-toggle" type="button" onclick="togglePw('l-pw',this)">👁️</button>
           </div>
@@ -2799,20 +2805,16 @@
 
           <span class="section-label">I am registering as</span>
           <div class="role-grid" id="signup-role-grid">
-            <button class="role-btn active" data-role="patient"
-              onclick="pickRole(this,'signup');renderExtra('patient')"><span class="r-icon">🧑‍⚕️</span>Patient</button>
-            <button class="role-btn" data-role="doctor" onclick="pickRole(this,'signup');renderExtra('doctor')"><span
-                class="r-icon">👨‍⚕️</span>Doctor</button>
-            <button class="role-btn" data-role="admin" onclick="pickRole(this,'signup');renderExtra('admin')"><span
-                class="r-icon">🏢</span>Admin / Reception</button>
-            <button class="role-btn" data-role="support" onclick="pickRole(this,'signup');renderExtra('support')"><span
-                class="r-icon">🎧</span>Support Staff</button>
+            <button class="role-btn active" data-role="patient" onclick="pickRole(this,'signup');renderExtra('patient')"><span class="r-icon"><i data-lucide="user"></i></span>Patient</button>
+            <button class="role-btn" data-role="doctor" onclick="pickRole(this,'signup');renderExtra('doctor')"><span class="r-icon"><i data-lucide="stethoscope"></i></span>Doctor</button>
+            <button class="role-btn" data-role="admin" onclick="pickRole(this,'signup');renderExtra('admin')"><span class="r-icon"><i data-lucide="building-2"></i></span>Admin / Reception</button>
+            <button class="role-btn" data-role="support" onclick="pickRole(this,'signup');renderExtra('support')"><span class="r-icon"><i data-lucide="headphones"></i></span>Support Staff</button>
           </div>
 
           <div class="form-group">
             <label for="s-name">Full Name <span class="req">*</span></label>
             <div class="input-wrap">
-              <span class="i-icon">👤</span>
+              <span class="i-icon"><i data-lucide="user"></i></span>
               <input type="text" id="s-name" placeholder="Enter your full name" autocomplete="name" />
             </div>
             <span class="field-error" id="err-s-name">Full name is required.</span>
@@ -2911,7 +2913,7 @@
           </div>
           <div style="display:flex; align-items:center; gap:12px;">
             <div class="notif-wrap" style="position:relative;">
-              <button class="notif-bell" onclick="toggleNotifs()">🔔<span class="notif-badge">2</span></button>
+              <button class="notif-bell" onclick="toggleNotifs()"><i data-lucide="bell" style="width:18px;height:18px;vertical-align:middle;"></i><span class="notif-badge">2</span></button>
               <div class="notif-panel" id="notifPanel">
                 <div class="notif-header">Notifications</div>
                 <div class="notif-item">
@@ -3089,7 +3091,7 @@
 
       <!-- Step 1: Select Clinic -->
       <div class="wizard-panel active" id="wp-step1">
-        <h3>🏥 Select a Clinic</h3>
+        <h3><i data-lucide="hospital" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;"></i>Select a Clinic</h3>
         <p class="wp-sub">Choose the clinic where you want to book your appointment.</p>
         <div class="select-card-grid" id="clinicList">
           <div class="loading-skeleton">
@@ -3107,7 +3109,7 @@
 
       <!-- Step 2: Select Doctor -->
       <div class="wizard-panel" id="wp-step2">
-        <h3>👨‍⚕️ Select a Doctor</h3>
+        <h3><i data-lucide="stethoscope" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;"></i>Select a Doctor</h3>
         <p class="wp-sub">Choose from doctors available at <strong id="selectedClinicName">—</strong>.</p>
         <div class="select-card-grid" id="doctorList">
           <div class="loading-skeleton">
@@ -3125,12 +3127,12 @@
 
       <!-- Step 3: Select Date & Slot -->
       <div class="wizard-panel" id="wp-step3">
-        <h3>📅 Select Date & Time Slot</h3>
+        <h3><i data-lucide="calendar" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;"></i>Select Date & Time Slot</h3>
         <p class="wp-sub">Booking with <strong id="selectedDoctorName">—</strong></p>
         <div class="form-group">
           <label>Appointment Date</label>
           <div class="input-wrap">
-            <span class="i-icon">📅</span>
+            <span class="i-icon"><i data-lucide="calendar"></i></span>
             <input type="date" id="bDate" style="padding-left:38px;" onchange="loadSlots()" />
           </div>
         </div>
@@ -3140,7 +3142,7 @@
         <div class="form-group">
           <label>Reason for Visit</label>
           <div class="input-wrap">
-            <span class="i-icon">📝</span>
+            <span class="i-icon"><i data-lucide="file-text"></i></span>
             <input type="text" id="bReason" placeholder="e.g. Fever, Routine check-up" style="padding-left:38px;" />
           </div>
         </div>
@@ -3291,12 +3293,12 @@
       doctor: `
     <div class="form-group">
       <label for="s-reg">Medical Registration No. <span class="req">*</span></label>
-      <div class="input-wrap"><span class="i-icon">🪪</span>
+      <div class="input-wrap"><span class="i-icon"><i data-lucide="id-card"></i></span>
         <input type="text" id="s-reg" placeholder="e.g. MH/12345/2020"/></div>
     </div>
     <div class="form-group">
       <label for="s-spec">Specialization <span class="req">*</span></label>
-      <div class="input-wrap"><span class="i-icon">🩺</span>
+      <div class="input-wrap"><span class="i-icon"><i data-lucide="stethoscope"></i></span>
         <select id="s-spec">
           <option value="">Select your specialization</option>
           <option>General Physician</option><option>Cardiologist</option>
@@ -3309,34 +3311,34 @@
     </div>
     <div class="form-group">
       <label for="s-clinic">Clinic Association <span class="req">*</span></label>
-      <div class="input-wrap"><span class="i-icon">🏥</span>
+      <div class="input-wrap"><span class="i-icon"><i data-lucide="hospital"></i></span>
         <input type="text" id="s-clinic" placeholder="Clinic name (if applicable)"/></div>
     </div>`,
       admin: `
     <div class="form-group">
       <label for="s-cname">Clinic Name <span class="req">*</span></label>
-      <div class="input-wrap"><span class="i-icon">🏢</span>
+      <div class="input-wrap"><span class="i-icon"><i data-lucide="building-2"></i></span>
         <input type="text" id="s-cname" placeholder="Enter clinic name"/></div>
     </div>
     <div class="form-group">
       <label for="s-cloc">Clinic Location <span class="req">*</span></label>
-      <div class="input-wrap"><span class="i-icon">📍</span>
+      <div class="input-wrap"><span class="i-icon"><i data-lucide="map-pin"></i></span>
         <input type="text" id="s-cloc" placeholder="City, State"/></div>
     </div>
     <div class="form-group">
       <label for="s-cpic">Clinic Picture <span class="req">*</span></label>
-      <div class="input-wrap"><span class="i-icon">📸</span>
+      <div class="input-wrap"><span class="i-icon"><i data-lucide="image"></i></span>
         <input type="file" id="s-cpic" accept="image/*" style="padding:10px;"/></div>
     </div>`,
       support: `
     <div class="form-group">
       <label for="s-empid">Employee / Staff ID</label>
-      <div class="input-wrap"><span class="i-icon">🪪</span>
+      <div class="input-wrap"><span class="i-icon"><i data-lucide="id-card"></i></span>
         <input type="text" id="s-empid" placeholder="Identification number"/></div>
     </div>
     <div class="form-group">
       <label for="s-dept">Department</label>
-      <div class="input-wrap"><span class="i-icon">📋</span>
+      <div class="input-wrap"><span class="i-icon"><i data-lucide="clipboard-list"></i></span>
         <input type="text" id="s-dept" placeholder="e.g. Patient Support"/></div>
     </div>`
     };
@@ -4985,27 +4987,27 @@
       let html = `
     <div style="background:var(--surface-2); padding:24px; border-radius:16px; border:1px solid rgba(255,255,255,0.05); margin-bottom:20px; box-shadow:0 8px 24px rgba(0,0,0,0.15);">
       <h4 style="margin:0 0 16px 0; font-family:var(--font-head); font-weight:700; color:var(--white); display:flex; align-items:center; gap:8px;">
-        <span style="font-size:1.2rem;">👤</span> Account Details
+        <i data-lucide="user" style="width:20px;height:20px;"></i> Account Details
       </h4>
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
         <div class="form-group" style="margin:0;">
           <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Full Name</label>
           <div class="input-wrap" style="position:relative;">
-            <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;">📝</span>
+            <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;"><i data-lucide="file-text"></i></span>
             <input type="text" id="set-name" value="${escapeHtml(authUser.fullName)}" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);" onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';" />
           </div>
         </div>
         <div class="form-group" style="margin:0;">
           <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Mobile Number</label>
           <div class="input-wrap" style="position:relative;">
-            <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;">📱</span>
+            <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;"><i data-lucide="smartphone"></i></span>
             <input type="text" id="set-mobile" value="${escapeHtml(authUser.mobile)}" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);" onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';" />
           </div>
         </div>
         <div class="form-group" style="margin:0; grid-column:1/-1;">
           <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Email Address</label>
           <div class="input-wrap" style="position:relative;">
-            <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;">✉️</span>
+            <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;"><i data-lucide="mail"></i></span>
             <input type="email" id="set-email" value="${escapeHtml(authUser.email || '')}" placeholder="e.g. name@example.com" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);" onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';" />
           </div>
         </div>
@@ -5015,30 +5017,30 @@
       html += `
     <div style="background:linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); padding:24px; border-radius:16px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 8px 32px rgba(0,0,0,0.2);">
       <h4 style="margin:0 0 16px 0; font-family:var(--font-head); font-weight:700; color:var(--teal-200); display:flex; align-items:center; gap:8px;">
-        <span style="font-size:1.2rem;">⚡</span> Quick Actions
+        <i data-lucide="zap" style="width:20px;height:20px;"></i> Quick Actions
       </h4>
       <div style="display:flex; flex-wrap:wrap; gap:12px;">
         <button class="btnTiny primary" type="button" onclick="saveSettings()">
-          💾 Save Changes
+          <i data-lucide="save" style="width:14px;height:14px;vertical-align:middle;"></i> Save Changes
         </button>
-        <button class="btnTiny" type="button" onclick="showToast('Refreshing your session...','🔄'); location.reload();">
-          🔄 Refresh App
+        <button class="btnTiny" type="button" onclick="showToast('Refreshing your session...',''); location.reload();">
+          <i data-lucide="refresh-cw" style="width:14px;height:14px;vertical-align:middle;"></i> Refresh App
         </button>
         <button class="btnTiny" type="button"
           onclick="if(confirm('Are you sure you want to log out?')) { localStorage.removeItem('careline_user'); location.reload(); }"
           style="border-color:rgba(255,100,100,0.4); color:#ff8888;">
-          🚪 Log Out
+          <i data-lucide="log-out" style="width:14px;height:14px;vertical-align:middle;"></i> Log Out
         </button>
         ${authUser.role === 'patient' ? `
         <button class="btnTiny" type="button" onclick="openBookingModal()">
-          📅 Book Appointment
+          <i data-lucide="calendar-plus" style="width:14px;height:14px;vertical-align:middle;"></i> Book Appointment
         </button>` : ''}
         ${authUser.role === 'doctor' ? `
         <button class="btnTiny" type="button" onclick="dashView('doc-daily')">
-          📋 Daily Schedule
+          <i data-lucide="calendar-days" style="width:14px;height:14px;vertical-align:middle;"></i> Daily Schedule
         </button>
         <button class="btnTiny" type="button" onclick="dashView('doc-rx')">
-          💊 Write Prescription
+          <i data-lucide="pill" style="width:14px;height:14px;vertical-align:middle;"></i> Write Prescription
         </button>` : ''}
         ${authUser.role === 'admin' ? `
         <button class="btnTiny" type="button" onclick="dashView('admin-queue')">
@@ -6924,5 +6926,6 @@ async function fetchPatientDoctorProfiles() {
     </div>
   </div>
 </div>
+<script>lucide.createIcons();</script>
 </body>
 </html>
