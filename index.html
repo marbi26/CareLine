@@ -4984,281 +4984,231 @@
       if (!content || !authUser) return;
 
       const p = authUser.profile || {};
-      let html = `
-    <div style="background:var(--surface-2); padding:24px; border-radius:16px; border:1px solid rgba(255,255,255,0.05); margin-bottom:20px; box-shadow:0 8px 24px rgba(0,0,0,0.15);">
-      <h4 style="margin:0 0 16px 0; font-family:var(--font-head); font-weight:700; color:var(--white); display:flex; align-items:center; gap:8px;">
-        <i data-lucide="user" style="width:20px;height:20px;"></i> Account Details
-      </h4>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
-        <div class="form-group" style="margin:0;">
-          <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Full Name</label>
-          <div class="input-wrap" style="position:relative;">
-            <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;"><i data-lucide="file-text"></i></span>
-            <input type="text" id="set-name" value="${escapeHtml(authUser.fullName)}" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);" onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';" />
-          </div>
+      const role = authUser.role;
+
+      // ── Shared input style helpers ──
+      const inp = `background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);`;
+      const inpFocus = `onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';"`;
+      const cardStyle = `background:var(--surface-2); padding:24px; border-radius:16px; border:1px solid rgba(255,255,255,0.07); margin-bottom:20px; box-shadow:0 8px 24px rgba(0,0,0,0.15);`;
+      const cardStyleTeal = `background:linear-gradient(145deg, rgba(20,184,166,0.07), rgba(20,184,166,0.02)); padding:24px; border-radius:16px; border:1px solid rgba(20,184,166,0.15); margin-bottom:20px; box-shadow:0 8px 24px rgba(0,0,0,0.15);`;
+      const h4Style = `margin:0 0 18px 0; font-family:var(--font-head); font-weight:700; display:flex; align-items:center; gap:8px; font-size:1rem;`;
+
+      function field(label, inputHtml) {
+        return `<div class="form-group" style="margin:0;"><label style="color:rgba(255,255,255,0.75); font-size:0.82rem; font-weight:600; margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:0.5px;">${label}</label>${inputHtml}</div>`;
+      }
+      function iconInput(icon, id, type, value, placeholder = '') {
+        return `<div style="position:relative;"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:0.5;display:flex;align-items:center;"><i data-lucide="${icon}" style="width:15px;height:15px;"></i></span><input type="${type}" id="${id}" value="${escapeHtml(String(value || ''))}" placeholder="${escapeHtml(placeholder)}" style="${inp}" ${inpFocus}/></div>`;
+      }
+      function iconSelect(icon, id, options, current) {
+        const opts = options.map(([v, l]) => `<option value="${v}" ${current === v ? 'selected' : ''}>${l}</option>`).join('');
+        return `<div style="position:relative;"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:0.5;display:flex;align-items:center;"><i data-lucide="${icon}" style="width:15px;height:15px;"></i></span><select id="${id}" style="${inp} appearance:none;" ${inpFocus.replace(/this\.style\.background[^;]+;/g,'')}><option value="">Select…</option>${opts}</select></div>`;
+      }
+
+      // ── 1. ACCOUNT DETAILS (all roles) ──
+      let html = `<div style="${cardStyle}">
+        <h4 style="${h4Style} color:var(--white);"><i data-lucide="user-circle" style="width:20px;height:20px;color:var(--teal-400);"></i> Account Details</h4>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:16px;">
+          ${field('Full Name', iconInput('user', 'set-name', 'text', authUser.fullName))}
+          ${field('Mobile Number', iconInput('smartphone', 'set-mobile', 'tel', authUser.mobile))}
+          <div class="form-group" style="margin:0; grid-column:1/-1;">${field('Email Address', iconInput('mail', 'set-email', 'email', authUser.email || '', 'e.g. name@example.com'))}</div>
         </div>
-        <div class="form-group" style="margin:0;">
-          <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Mobile Number</label>
-          <div class="input-wrap" style="position:relative;">
-            <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;"><i data-lucide="smartphone"></i></span>
-            <input type="text" id="set-mobile" value="${escapeHtml(authUser.mobile)}" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);" onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';" />
-          </div>
-        </div>
-        <div class="form-group" style="margin:0; grid-column:1/-1;">
-          <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Email Address</label>
-          <div class="input-wrap" style="position:relative;">
-            <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;"><i data-lucide="mail"></i></span>
-            <input type="email" id="set-email" value="${escapeHtml(authUser.email || '')}" placeholder="e.g. name@example.com" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);" onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';" />
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-      html += `
-    <div style="background:linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); padding:24px; border-radius:16px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-      <h4 style="margin:0 0 16px 0; font-family:var(--font-head); font-weight:700; color:var(--teal-200); display:flex; align-items:center; gap:8px;">
-        <i data-lucide="zap" style="width:20px;height:20px;"></i> Quick Actions
-      </h4>
-      <div style="display:flex; flex-wrap:wrap; gap:12px;">
-        <button class="btnTiny primary" type="button" onclick="saveSettings()">
-          <i data-lucide="save" style="width:14px;height:14px;vertical-align:middle;"></i> Save Changes
-        </button>
-        <button class="btnTiny" type="button" onclick="showToast('Refreshing your session...',''); location.reload();">
-          <i data-lucide="refresh-cw" style="width:14px;height:14px;vertical-align:middle;"></i> Refresh App
-        </button>
-        <button class="btnTiny" type="button"
-          onclick="if(confirm('Are you sure you want to log out?')) { localStorage.removeItem('careline_user'); location.reload(); }"
-          style="border-color:rgba(255,100,100,0.4); color:#ff8888;">
-          <i data-lucide="log-out" style="width:14px;height:14px;vertical-align:middle;"></i> Log Out
-        </button>
-        ${authUser.role === 'patient' ? `
-        <button class="btnTiny" type="button" onclick="openBookingModal()">
-          <i data-lucide="calendar-plus" style="width:14px;height:14px;vertical-align:middle;"></i> Book Appointment
-        </button>` : ''}
-        ${authUser.role === 'doctor' ? `
-        <button class="btnTiny" type="button" onclick="dashView('doc-daily')">
-          <i data-lucide="calendar-days" style="width:14px;height:14px;vertical-align:middle;"></i> Daily Schedule
-        </button>
-        <button class="btnTiny" type="button" onclick="dashView('doc-rx')">
-          <i data-lucide="pill" style="width:14px;height:14px;vertical-align:middle;"></i> Write Prescription
-        </button>` : ''}
-        ${authUser.role === 'admin' ? `
-        <button class="btnTiny" type="button" onclick="dashView('admin-queue')">
-          🏥 Manage Queue
-        </button>
-        <button class="btnTiny" type="button" onclick="dashView('admin-doctors')">
-          👨‍⚕️ Manage Doctors
-        </button>` : ''}
-      </div>
-    </div>
-  `;
-      if (authUser.role === 'admin') {
-        html += `
-      <div style="background:linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); padding:24px; border-radius:16px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-        <h4 style="margin:0 0 16px 0; font-family:var(--font-head); font-weight:700; color:var(--teal-200); display:flex; align-items:center; gap:8px;">
-          <span style="font-size:1.2rem;">🏥</span> Clinic Configuration
-        </h4>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
-          <div class="form-group" style="margin:0;">
-            <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Clinic Name</label>
-            <div class="input-wrap" style="position:relative;">
-              <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;">🏢</span>
-              <input type="text" id="set-cname" value="${escapeHtml(p.clinicName || '')}" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);" onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';" />
+      </div>`;
+
+      // ── 2. ROLE-SPECIFIC SECTION ──
+      if (role === 'patient') {
+        html += `<div style="${cardStyleTeal}">
+          <h4 style="${h4Style} color:var(--teal-300);"><i data-lucide="heart-pulse" style="width:20px;height:20px;"></i> Health Profile</h4>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px;">
+            ${field('Age', iconInput('calendar', 'set-age', 'number', p.age || '', 'e.g. 28'))}
+            ${field('Gender', iconSelect('user', 'set-gender', [['Male','Male'],['Female','Female'],['Other','Other / Prefer not to say']], p.gender))}
+            ${field('Blood Group', iconSelect('droplet', 'set-blood', [['A+','A+'],['A-','A−'],['B+','B+'],['B-','B−'],['AB+','AB+'],['AB-','AB−'],['O+','O+'],['O-','O−']], p.bloodGroup))}
+            ${field('Known Allergies', iconInput('alert-triangle', 'set-allergies', 'text', p.allergies || '', 'e.g. Penicillin, Dust'))}
+            <div style="grid-column:1/-1;">
+              ${field('Emergency Contact (Name & Number)', iconInput('phone-call', 'set-emergency', 'text', p.emergencyContact || '', 'e.g. Rahul Verma – 9876543210'))}
             </div>
           </div>
-          <div class="form-group" style="margin:0;">
-            <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Location</label>
-            <div class="input-wrap" style="position:relative;">
-              <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;">📍</span>
-              <input type="text" id="set-loc" value="${escapeHtml(p.clinicLocation || '')}" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);" onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';" />
-            </div>
+          <p style="margin:14px 0 0 0; font-size:0.78rem; color:var(--muted); display:flex; align-items:center; gap:6px;"><i data-lucide="shield" style="width:12px;height:12px;"></i> Your health data is private and only visible to your assigned doctor.</p>
+        </div>`;
+
+      } else if (role === 'doctor') {
+        html += `<div style="${cardStyleTeal}">
+          <h4 style="${h4Style} color:var(--teal-300);"><i data-lucide="stethoscope" style="width:20px;height:20px;"></i> Professional Profile</h4>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
+            ${field('Specialization', iconInput('stethoscope', 'set-spec', 'text', p.specialization || '', 'e.g. Cardiologist'))}
+            ${field('Clinic / Hospital Association', iconInput('building-2', 'set-cname-doc', 'text', p.clinicAssociation || p.clinicName || '', 'e.g. City General Hospital'))}
+            ${field('Medical Registration No.', iconInput('badge', 'set-reg', 'text', p.medicalRegistrationNumber || '', 'e.g. MH/12345/2015'))}
+            ${field('Years of Experience', iconInput('clock', 'set-exp', 'number', p.experience || '', 'e.g. 8'))}
+            ${field('Gender', iconSelect('user', 'set-gender', [['Male','Male'],['Female','Female'],['Other','Other']], p.gender))}
+            ${field('Availability Hours', iconInput('calendar-clock', 'set-avail', 'text', p.availability || '', 'e.g. Mon–Sat, 10AM–6PM'))}
+            <div style="grid-column:1/-1;"><div class="form-group" style="margin:0;">
+              <label style="color:rgba(255,255,255,0.75); font-size:0.82rem; font-weight:600; margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:0.5px;">Professional Bio</label>
+              <textarea id="set-bio" placeholder="Write a short bio about your qualifications and experience…" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:14px; border-radius:10px; width:100%; height:100px; resize:vertical; font-family:inherit; transition:all 0.3s ease;" onfocus="this.style.borderColor='var(--teal-400)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)';">${escapeHtml(p.bio || '')}</textarea>
+              <p style="margin:6px 0 0 0; font-size:0.77rem; color:var(--muted);">Visible to patients on your public doctor profile.</p>
+            </div></div>
           </div>
-          <div class="form-group" style="margin:0; grid-column:1/-1;">
-            <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Consultation Fee (₹)</label>
-            <div class="input-wrap" style="position:relative;">
-              <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;">💰</span>
-              <input type="number" id="set-fee" value="${p.consultationFee || 500}" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:140px; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);" onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';" />
-            </div>
+        </div>`;
+
+      } else if (role === 'admin') {
+        const picSrc = p.clinicPicture
+          ? (p.clinicPicture.startsWith('/uploads') ? API_BASE + p.clinicPicture : p.clinicPicture)
+          : null;
+        html += `<div style="${cardStyleTeal}">
+          <h4 style="${h4Style} color:var(--teal-300);"><i data-lucide="hospital" style="width:20px;height:20px;"></i> Clinic Configuration</h4>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
+            ${field('Clinic Name', iconInput('building-2', 'set-cname', 'text', p.clinicName || '', 'e.g. City Medical Center'))}
+            ${field('Clinic Location / Address', iconInput('map-pin', 'set-loc', 'text', p.clinicLocation || '', 'e.g. Connaught Place, New Delhi'))}
+            ${field('Consultation Fee (₹)', `<div style="position:relative;"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:0.5;display:flex;align-items:center;"><i data-lucide="indian-rupee" style="width:15px;height:15px;"></i></span><input type="number" id="set-fee" value="${p.consultationFee || 500}" min="0" style="${inp}" ${inpFocus}/></div>`)}
+            ${field('Working Hours', iconInput('clock', 'set-hours', 'text', p.workingHours || '', 'e.g. Mon–Sat 9AM–7PM'))}
+            ${field('Contact Number', iconInput('phone', 'set-contact', 'tel', p.contactNumber || authUser.mobile, 'Clinic phone'))}
+            ${field('Registration / License No.', iconInput('badge', 'set-license', 'text', p.licenseNo || '', 'e.g. CLN/2019/DL/1234'))}
           </div>
-        </div>
-        <div class="form-group" style="margin:20px 0 0 0;">
-          <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:12px; display:block;">Clinic Picture</label>
-          <div style="background:rgba(0,0,0,0.2); padding:16px; border-radius:12px; border:1px dashed rgba(255,255,255,0.15); display:flex; flex-direction:column; align-items:center; gap:16px;">
-            ${p.clinicPicture ? `<img src="${p.clinicPicture.startsWith('/uploads') ? API_BASE + escapeHtml(p.clinicPicture) : escapeHtml(p.clinicPicture)}" alt="Clinic Picture" style="max-width:100%; height:200px; border-radius:8px; border:2px solid rgba(255,255,255,0.1); object-fit:cover; box-shadow:0 4px 12px rgba(0,0,0,0.3);" />` : `<div class="subtle" style="padding:40px; text-align:center;">No picture uploaded</div>`}
-            <div>
-              <label class="btnTiny secondary" style="cursor:pointer; display:inline-flex; align-items:center; gap:8px;">
-                <span>📸 Upload New Picture</span>
+          <div style="margin-top:20px;">
+            <label style="color:rgba(255,255,255,0.75); font-size:0.82rem; font-weight:600; margin-bottom:10px; display:block; text-transform:uppercase; letter-spacing:0.5px;">Clinic Picture</label>
+            <div style="background:rgba(0,0,0,0.2); padding:16px; border-radius:12px; border:1px dashed rgba(255,255,255,0.12); display:flex; flex-direction:column; align-items:center; gap:14px;">
+              ${picSrc
+                ? `<img src="${escapeHtml(picSrc)}" alt="Clinic Picture" style="max-width:100%; height:180px; border-radius:10px; border:2px solid rgba(255,255,255,0.08); object-fit:cover; box-shadow:0 4px 12px rgba(0,0,0,0.4);"/>`
+                : `<div style="color:var(--muted); font-size:0.85rem; padding:24px; text-align:center;"><i data-lucide="image" style="width:2rem;height:2rem;opacity:0.3;"></i><div style="margin-top:8px;">No picture uploaded yet</div></div>`}
+              <label class="btnTiny" style="cursor:pointer; display:inline-flex; align-items:center; gap:8px;">
+                <i data-lucide="upload-cloud" style="width:14px;height:14px;"></i> Upload / Change Picture
                 <input type="file" id="set-cpic" accept="image/*" style="display:none;" />
               </label>
             </div>
           </div>
-        </div>
-      </div>
-    `;
-      } else if (authUser.role === 'doctor') {
-        html += `
-      <div style="background:linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); padding:24px; border-radius:16px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-        <h4 style="margin:0 0 16px 0; font-family:var(--font-head); font-weight:700; color:var(--teal-200); display:flex; align-items:center; gap:8px;">
-          <span style="font-size:1.2rem;">👨‍⚕️</span> Professional Profile
-        </h4>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
-          <div class="form-group" style="margin:0; grid-column:1/-1;">
-            <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Clinic Name</label>
-            <div class="input-wrap" style="position:relative;">
-              <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;">🏥</span>
-              <input type="text" id="set-cname-doc" value="${escapeHtml(p.clinicName || '')}" placeholder="e.g. City General Hospital" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);" onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';" />
-            </div>
+        </div>`;
+
+      } else if (role === 'support') {
+        html += `<div style="${cardStyleTeal}">
+          <h4 style="${h4Style} color:var(--teal-300);"><i data-lucide="headphones" style="width:20px;height:20px;"></i> Staff Profile</h4>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
+            ${field('Employee ID', iconInput('badge', 'set-empid', 'text', p.employeeId || '', 'e.g. EMP-2024-0042'))}
+            ${field('Department', iconSelect('building', 'set-dept', [['Reception','Reception / Front Desk'],['Lab','Laboratory'],['Pharmacy','Pharmacy'],['IT','IT & Systems'],['Administration','Administration'],['Other','Other']], p.department))}
+            ${field('Shift Timing', iconInput('clock', 'set-shift', 'text', p.shift || '', 'e.g. 9AM–5PM'))}
+            ${field('Supervisor Name', iconInput('user-check', 'set-supervisor', 'text', p.supervisor || '', 'e.g. Dr. Mehta'))}
           </div>
-          <div class="form-group" style="margin:0;">
-            <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Specialization</label>
-            <div class="input-wrap" style="position:relative;">
-              <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;">🩺</span>
-              <input type="text" id="set-spec" value="${escapeHtml(p.specialization || '')}" placeholder="e.g. Cardiologist" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);" onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';" />
-            </div>
-          </div>
-          <div class="form-group" style="margin:0;">
-            <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Gender</label>
-            <div class="input-wrap" style="position:relative;">
-              <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;">⚧️</span>
-              <select id="set-gender" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; appearance:none; transition:all 0.3s ease;" onfocus="this.style.borderColor='var(--teal-400)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)';">
-                <option value="" ${!p.gender ? 'selected' : ''}>Select</option>
-                <option value="Male" ${p.gender === 'Male' ? 'selected' : ''}>Male</option>
-                <option value="Female" ${p.gender === 'Female' ? 'selected' : ''}>Female</option>
-                <option value="Other" ${p.gender === 'Other' ? 'selected' : ''}>Other</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div class="form-group" style="margin:20px 0 0 0;">
-          <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Professional Bio</label>
-          <div class="input-wrap" style="position:relative;">
-            <textarea id="set-bio" placeholder="Write a short bio about your experience..." style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:14px; border-radius:10px; width:100%; height:110px; resize:vertical; font-family:inherit; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);" onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';">${escapeHtml(p.bio || '')}</textarea>
-          </div>
-          <p style="margin:8px 0 0 0; font-size:0.8rem; color:var(--text-subtle);">This will be visible to patients when they search for your profile.</p>
-        </div>
-      </div>
-    `;
-      } else if (authUser.role === 'patient') {
-        html += `
-      <div style="background:linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); padding:24px; border-radius:16px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-        <h4 style="margin:0 0 16px 0; font-family:var(--font-head); font-weight:700; color:var(--teal-200); display:flex; align-items:center; gap:8px;">
-          <span style="font-size:1.2rem;">🧑‍⚕️</span> Personal Details
-        </h4>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
-          <div class="form-group" style="margin:0;">
-            <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Age</label>
-            <div class="input-wrap" style="position:relative;">
-              <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;">🎂</span>
-              <input type="number" id="set-age" value="${p.age || ''}" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);" onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';" />
-            </div>
-          </div>
-          <div class="form-group" style="margin:0;">
-            <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">Gender</label>
-            <div class="input-wrap" style="position:relative;">
-              <span class="i-icon" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:0.6;">⚧️</span>
-              <select id="set-gender" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; appearance:none; transition:all 0.3s ease;" onfocus="this.style.borderColor='var(--teal-400)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)';">
-                <option value="" ${!p.gender ? 'selected' : ''}>Select</option>
-                <option value="Male" ${p.gender === 'Male' ? 'selected' : ''}>Male</option>
-                <option value="Female" ${p.gender === 'Female' ? 'selected' : ''}>Female</option>
-                <option value="Other" ${p.gender === 'Other' ? 'selected' : ''}>Other</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+        </div>`;
       }
-        html += `
-    <div style="background:linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); padding:24px; border-radius:16px; border:1px solid rgba(255,80,80,0.15); box-shadow:0 8px 32px rgba(0,0,0,0.2); margin-top:4px;">
-      <h4 style="margin:0 0 16px 0; font-family:var(--font-head); font-weight:700; color:#ff8888; display:flex; align-items:center; gap:8px;">
-        <span style="font-size:1.2rem;">🔐</span> Security
-      </h4>
-      <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
-        <div class="form-group" style="margin:0;">
-          <label style="color:var(--white); font-size:0.9rem; font-weight:600; margin-bottom:6px; display:block;">New Password</label>
-          <input type="password" id="set-newpwd" placeholder="Leave blank to keep current"
-            style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 14px; border-radius:10px; width:220px; transition:all 0.3s ease;"
-            onfocus="this.style.borderColor='var(--teal-400)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)';" />
+
+      // ── 3. QUICK ACTIONS ──
+      html += `<div style="background:linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)); padding:22px; border-radius:16px; border:1px solid rgba(255,255,255,0.07); margin-bottom:20px;">
+        <h4 style="${h4Style} color:var(--teal-200);"><i data-lucide="zap" style="width:18px;height:18px;"></i> Quick Actions</h4>
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+          <button class="btnTiny primary" type="button" onclick="saveSettings()">
+            <i data-lucide="save" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Save Changes
+          </button>
+          <button class="btnTiny" type="button" onclick="showToast('Refreshing…',''); location.reload();">
+            <i data-lucide="refresh-cw" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Refresh App
+          </button>
+          ${role === 'patient' ? `<button class="btnTiny" type="button" onclick="openBookingModal()"><i data-lucide="calendar-plus" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Book Appointment</button>` : ''}
+          ${role === 'doctor' ? `<button class="btnTiny" type="button" onclick="dashView('doc-daily')"><i data-lucide="calendar-days" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Daily Schedule</button><button class="btnTiny" type="button" onclick="dashView('doc-rx')"><i data-lucide="pill" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Write Prescription</button>` : ''}
+          ${role === 'admin' ? `<button class="btnTiny" type="button" onclick="dashView('admin-queue')"><i data-lucide="list-ordered" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Manage Queue</button><button class="btnTiny" type="button" onclick="dashView('admin-doctors')"><i data-lucide="stethoscope" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Manage Doctors</button><button class="btnTiny" type="button" onclick="dashView('admin-reports')"><i data-lucide="bar-chart-2" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Financial Reports</button>` : ''}
+          ${role === 'support' ? `<button class="btnTiny" type="button" onclick="dashView('messages')"><i data-lucide="message-square" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Messages</button>` : ''}
+          <button class="btnTiny" type="button" onclick="if(confirm('Are you sure you want to log out?')) { localStorage.removeItem('careline_user'); localStorage.removeItem('careline_token'); location.reload(); }" style="border-color:rgba(255,100,100,0.4); color:#ff8888; margin-left:auto;">
+            <i data-lucide="log-out" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Log Out
+          </button>
         </div>
-        <button class="btnTiny" type="button"
-          style="margin-top:22px; border-color:rgba(255,80,80,0.4); color:#ff8888;"
-          onclick="settingsChangePassword()">
-          🔐 Update Password
-        </button>
-      </div>
-    </div>
-  `;
+      </div>`;
+
+      // ── 4. SECURITY ──
+      html += `<div style="background:linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); padding:24px; border-radius:16px; border:1px solid rgba(255,80,80,0.15); box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+        <h4 style="${h4Style} color:#ff8888;"><i data-lucide="shield-alert" style="width:20px;height:20px;"></i> Security</h4>
+        <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
+          <div class="form-group" style="margin:0;">
+            <label style="color:rgba(255,255,255,0.75); font-size:0.82rem; font-weight:600; margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:0.5px;">New Password</label>
+            <input type="password" id="set-newpwd" placeholder="Leave blank to keep current"
+              style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 14px; border-radius:10px; width:230px; transition:all 0.3s ease;"
+              onfocus="this.style.borderColor='var(--teal-400)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)';" />
+          </div>
+          <button class="btnTiny" type="button" style="border-color:rgba(255,80,80,0.4); color:#ff8888;" onclick="settingsChangePassword()">
+            <i data-lucide="lock" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Update Password
+          </button>
+        </div>
+        <p style="margin:12px 0 0 0; font-size:0.78rem; color:var(--muted);">Use at least 6 characters. We recommend a mix of letters, numbers, and symbols.</p>
+      </div>`;
 
       content.innerHTML = html;
+      reRenderIcons();
     }
 
     async function saveSettings() {
       if (!authUser) return;
-
+      const role = authUser.role;
       const body = {
         userId: authUser.id,
-        fullName: g('set-name')?.value,
-        mobile: g('set-mobile')?.value,
-        email: g('set-email')?.value,
+        fullName: g('set-name')?.value?.trim(),
+        mobile: g('set-mobile')?.value?.trim(),
+        email: g('set-email')?.value?.trim(),
       };
 
-      if (authUser.role === 'admin') {
-        body.clinicName = g('set-cname')?.value;
+      if (role === 'admin') {
+        body.clinicName = g('set-cname')?.value?.trim();
         body.consultationFee = g('set-fee')?.value;
-        body.clinicLocation = g('set-loc')?.value;
-      } else if (authUser.role === 'doctor') {
-        body.clinicName = g('set-cname-doc')?.value;
-        body.specialization = g('set-spec')?.value;
+        body.clinicLocation = g('set-loc')?.value?.trim();
+        // Extra admin fields saved to profile via update-profile handler
+        body.workingHours = g('set-hours')?.value?.trim();
+        body.contactNumber = g('set-contact')?.value?.trim();
+        body.licenseNo = g('set-license')?.value?.trim();
+      } else if (role === 'doctor') {
+        body.specialization = g('set-spec')?.value?.trim();
+        body.clinicAssociation = g('set-cname-doc')?.value?.trim();
+        body.medicalRegistrationNumber = g('set-reg')?.value?.trim();
+        body.experience = g('set-exp')?.value;
         body.gender = g('set-gender')?.value;
-        body.bio = g('set-bio')?.value;
-      } else if (authUser.role === 'patient') {
+        body.availability = g('set-avail')?.value?.trim();
+        body.bio = g('set-bio')?.value?.trim();
+      } else if (role === 'patient') {
         body.age = g('set-age')?.value;
         body.gender = g('set-gender')?.value;
+        body.bloodGroup = g('set-blood')?.value;
+        body.allergies = g('set-allergies')?.value?.trim();
+        body.emergencyContact = g('set-emergency')?.value?.trim();
+      } else if (role === 'support') {
+        body.employeeId = g('set-empid')?.value?.trim();
+        body.department = g('set-dept')?.value;
+        body.shift = g('set-shift')?.value?.trim();
+        body.supervisor = g('set-supervisor')?.value?.trim();
       }
 
+      // Handle clinic picture upload for admin
       const fileInp = g('set-cpic');
       if (fileInp && fileInp.files && fileInp.files.length > 0) {
         try {
           body.clinicPicture = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result);
-            reader.onerror = () => reject(new Error('Failed to read new picture'));
+            reader.onerror = () => reject(new Error('Failed to read picture'));
             reader.readAsDataURL(fileInp.files[0]);
           });
         } catch (e) {
-          showToast(e.message || 'Failed to read picture.', '⚠️', true);
+          showToast(e.message || 'Failed to read picture.', '', true);
           return;
         }
       }
 
       try {
-        const data = await api('/api/user/update-profile', {
-          method: 'POST',
-          body: body
-        });
-        showToast('Settings updated successfully.', '✅');
+        const data = await api('/api/user/update-profile', { method: 'POST', body });
+        showToast('Settings saved successfully!', '');
         authUser = data.user;
         localStorage.setItem('careline_user', JSON.stringify(authUser));
         renderSettings();
       } catch (e) {
-        showToast(e.message || 'Failed to update settings.', '⚠️', true);
+        showToast(e.message || 'Failed to update settings.', '', true);
       }
     }
+
     async function settingsChangePassword() {
-    const pwd = g('set-newpwd')?.value?.trim();
-    if (!pwd) { showToast('Enter a new password first.', '⚠️', true); return; }
-    if (pwd.length < 6) { showToast('Password must be at least 6 characters.', '⚠️', true); return; }
-    try {
-      await api('/api/user/update-profile', {
-        method: 'POST',
-        body: { userId: authUser.id, password: pwd }
-      });
-      showToast('Password updated successfully.', '✅');
-      g('set-newpwd').value = '';
-    } catch(e) {
-      showToast(e.message || 'Failed to update password.', '⚠️', true);
+      const pwd = g('set-newpwd')?.value?.trim();
+      if (!pwd) { showToast('Enter a new password first.', '', true); return; }
+      if (pwd.length < 6) { showToast('Password must be at least 6 characters.', '', true); return; }
+      try {
+        await api('/api/user/update-profile', { method: 'POST', body: { userId: authUser.id, password: pwd } });
+        showToast('Password updated successfully!', '');
+        g('set-newpwd').value = '';
+      } catch (e) {
+        showToast(e.message || 'Failed to update password.', '', true);
+      }
     }
-  }
+
+
 
     function docEnsureState(reset = false) {
       let st = reset ? null : docReadState();
