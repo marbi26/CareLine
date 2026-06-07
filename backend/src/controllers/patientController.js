@@ -55,6 +55,18 @@ export async function rescheduleAppointment(req, res) {
     const appt = await Appointment.findById(apptId);
     if (!appt) return res.status(404).json({ message: 'Appointment not found' });
 
+    // Check for slot conflicts at the new time
+    const slotConflict = await Appointment.findOne({
+      doctorId: appt.doctorId,
+      date: newDate,
+      time: newSlotTime,
+      stage: { $nin: ['cancelled', 'no-show'] },
+      _id: { $ne: apptId }
+    });
+    if (slotConflict) {
+      return res.status(400).json({ message: 'SLOT_UNAVAILABLE' });
+    }
+
     appt.date = newDate;
     appt.time = newSlotTime;
     appt.stage = 'scheduled';

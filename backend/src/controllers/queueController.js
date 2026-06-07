@@ -1,10 +1,11 @@
 // backend/src/controllers/queueController.js
-import { Patient, Doctor, Admin, Appointment, Payment } from '../models.js';
+import { Patient, Doctor, Admin, Appointment, Payment, Message } from '../models.js';
 
 export async function getLiveQueue(req, res) {
   const { clinicId, doctorId } = req.query;
   try {
-    const query = {};
+    const today = new Date().toISOString().split('T')[0];
+    const query = { date: today };
     if (clinicId) query.clinicId = clinicId;
     if (doctorId) query.doctorId = doctorId;
 
@@ -115,6 +116,7 @@ export async function getDashboardStats(req, res) {
   const { userId, role, clinicId } = req.query;
   try {
     let kpis = {};
+    const unreadCount = userId ? await Message.countDocuments({ receiverId: userId, read: false }) : 0;
 
     if (role === 'patient') {
       const appts = await Appointment.find({ patientId: userId });
@@ -134,7 +136,7 @@ export async function getDashboardStats(req, res) {
       kpis = {
         kpi1: String(upcoming), kpi1n: 'Scheduled', kpi1l: 'Appointments',
         kpi2: pos, kpi2n: 'Live Position', kpi2l: 'Queue Position',
-        kpi3: '0', kpi3n: 'Unread chats', kpi3l: 'Messages'
+        kpi3: String(unreadCount), kpi3n: 'Unread chats', kpi3l: 'Messages'
       };
     } else if (role === 'doctor') {
       const appts = await Appointment.find({ doctorId: userId });
@@ -144,7 +146,7 @@ export async function getDashboardStats(req, res) {
       kpis = {
         kpi1: String(appts.length), kpi1n: `Completed: ${completed}`, kpi1l: "Today's Consultations",
         kpi2: String(waiting), kpi2n: 'Patients waiting', kpi2l: 'Live Queue',
-        kpi3: '0', kpi3n: 'Unread chats', kpi3l: 'Messages'
+        kpi3: String(unreadCount), kpi3n: 'Unread chats', kpi3l: 'Messages'
       };
     } else if (role === 'admin') {
       const appts = await Appointment.find({ clinicId: userId });

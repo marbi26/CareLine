@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { User } from "./models.js";
+import { Admin } from "./models.js";
 
 dotenv.config();
 
@@ -34,18 +34,18 @@ async function run() {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 
-  const users = await User.find({ "profile.clinicPicture": { $regex: /^data:image\// } });
+  const admins = await Admin.find({ "profile.clinicPicture": { $regex: /^data:image\// } });
   
-  console.log(`Found ${users.length} users with Base64 clinic pictures.`);
+  console.log(`Found ${admins.length} clinics with Base64 clinic pictures.`);
 
-  for (const u of users) {
+  for (const u of admins) {
     if (u.profile && u.profile.clinicPicture) {
       const newPath = saveBase64Image(u.profile.clinicPicture, `clinic-${u._id}`);
       if (newPath !== u.profile.clinicPicture) {
         u.profile.clinicPicture = newPath;
         u.markModified('profile');
         await u.save();
-        console.log(`Migrated clinic picture for user: ${u.fullName} (${u._id})`);
+        console.log(`Migrated clinic picture for clinic: ${u.profile.clinicName || u.fullName} (${u._id})`);
       }
     }
   }

@@ -4,6 +4,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 // Route imports
@@ -11,10 +12,34 @@ import authRoutes from './routes/authRoutes.js';
 import doctorRoutes from './routes/doctorRoutes.js';
 import patientRoutes from './routes/patientRoutes.js';
 import queueRoutes from './routes/queueRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
 import { Patient, Doctor, Admin, Support, Payment } from './models.js';
+import { auth } from './middleware/auth.js';
+import { assignQueue, updateQueueStage, completeConsultation, getDashboardStats } from './controllers/queueController.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const uploadsDir = path.join(__dirname, '../uploads');
+
+// Save Base64 helper
+function saveBase64Image(base64Str, prefix) {
+  if (!base64Str || !base64Str.startsWith("data:image/")) return base64Str;
+  
+  const matches = base64Str.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
+  if (!matches || matches.length !== 3) return base64Str;
+  
+  const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+  const data = Buffer.from(matches[2], 'base64');
+  const filename = `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}.${ext}`;
+  
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  
+  const filepath = path.join(uploadsDir, filename);
+  fs.writeFileSync(filepath, data);
+  return `/uploads/${filename}`;
+}
 
 const app = express();
 
@@ -25,16 +50,26 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 // Serve static files from the root CareLine folder
 app.use(express.static(path.join(__dirname, '../../')));
 
+// Serve uploads folder static files
+app.use('/uploads', express.static(uploadsDir));
+
 // Binding API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/queue', queueRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Public / API namespace compatibility handlers
-app.use('/api/clinics', doctorRoutes); 
 app.use('/api/patient', patientRoutes); 
 app.use('/api/user', patientRoutes); 
+
+// Compatibility route bindings
+app.post('/api/admin/queue/assign', auth, assignQueue);
+app.post('/api/admin/queue/delete', auth, updateQueueStage);
+app.post('/api/admin/queue/advance', auth, updateQueueStage);
+app.post('/api/doctor/queue/complete', auth, completeConsultation);
+app.get('/api/dashboard/stats', getDashboardStats);
 
 // ---- Additional API: Clinics discovery handler ----
 app.get('/api/clinics', async (req, res) => {
@@ -141,7 +176,22 @@ app.get('/api/admin/reports/financial', async (req, res) => {
 
 // ---- Additional API: User profile updates ----
 app.post('/api/user/update-profile', async (req, res) => {
-  const { userId, fullName, mobile, email, consultationFee, clinicLocation } = req.body;
+  const { 
+    userId, 
+    fullName, 
+    mobile, 
+    email, 
+    password, 
+    consultationFee, 
+    clinicLocation, 
+    clinicName, 
+    clinicPicture, 
+    specialization, 
+    gender, 
+    bio, 
+    age, 
+    clinicAssociation 
+  } = req.body;
   try {
     let user = await Patient.findById(userId);
     if (!user) user = await Doctor.findById(userId);
@@ -153,18 +203,55 @@ app.post('/api/user/update-profile', async (req, res) => {
     if (fullName) user.fullName = fullName;
     if (mobile) user.mobile = mobile;
     if (email) user.email = email;
+    if (password) user.password = password;
 
     if (user.role === 'admin') {
       user.profile = {
         ...user.profile,
-        consultationFee: consultationFee || user.profile?.consultationFee,
-        clinicLocation: clinicLocation || user.profile?.clinicLocation
+        clinicName: clinicName || user.profile?.clinicName,
+        clinicLocation: clinicLocation || user.profile?.clinicLocation,
+        consultationFee: consultationFee !== undefined ? Number(consultationFee) : user.profile?.consultationFee,
+      };
+      if (clinicPicture) {
+        if (clinicPicture.startsWith('data:image/')) {
+          const relativePath = saveBase64Image(clinicPicture, `clinic-${user._id}`);
+          user.profile.clinicPicture = relativePath;
+        } else {
+          user.profile.clinicPicture = clinicPicture;
+        }
+      }
+    } else if (user.role === 'doctor') {
+      user.profile = {
+        ...user.profile,
+        specialization: specialization || user.profile?.specialization,
+        clinicAssociation: clinicAssociation || clinicName || user.profile?.clinicAssociation,
+        gender: gender || user.profile?.gender,
+        bio: bio || user.profile?.bio
+      };
+    } else if (user.role === 'patient') {
+      user.profile = {
+        ...user.profile,
+        age: age !== undefined ? Number(age) : user.profile?.age,
+        gender: gender || user.profile?.gender
       };
     }
+
+    user.markModified('profile');
     await user.save();
 
-    res.json({ ok: true, user });
+    // Prepare clean user object for frontend response
+    const cleanUser = {
+      id: user._id,
+      email: user.email,
+      fullName: user.fullName,
+      mobile: user.mobile,
+      role: user.role,
+      profile: user.profile
+    };
+
+    res.json({ ok: true, user: cleanUser });
   } catch (err) {
+    console.error('Error updating profile:', err);
     res.status(500).json({ message: err.message });
   }
 });

@@ -16,7 +16,7 @@ const transporter = nodemailer.createTransport({
  */
 export async function sendMail({ to, subject, html }) {
   const mailOptions = {
-    from: `"CareLine" <${process.env.SMTP_USER}>`,
+    from: process.env.SMTP_FROM || `"CareLine" <${process.env.SMTP_USER}>`,
     to,
     subject,
     html,
