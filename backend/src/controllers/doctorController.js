@@ -75,17 +75,36 @@ export async function getDoctors(req, res) {
   }
 }
 
+// ---- Get Single Doctor Profile (With Associated Clinic Joined) ----
 export async function getDoctorProfile(req, res) {
   const { doctorId } = req.params;
   try {
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
+
+    // Look up the clinic admin whose clinicName matches this doctor's clinicAssociation
+    const clinicName = doctor.profile?.clinicAssociation;
+    const clinic = await Admin.findOne({
+      status: 'approved',
+      'profile.clinicName': clinicName
+    });
+
+    // Format the clinic profile so it fits the frontend requirements
+    const formattedClinic = clinic ? {
+      name: clinic.profile?.clinicName || clinic.fullName,
+      location: clinic.profile?.clinicLocation || 'Not specified',
+      picture: clinic.profile?.clinicPicture || null,
+      consultationFee: Number(clinic.profile?.consultationFee) || 500
+    } : null;
+
     res.json({
-      id: doctor._id,
-      fullName: doctor.fullName,
-      email: doctor.email,
-      mobile: doctor.mobile,
-      profile: doctor.profile
+      doctor: {
+        id: doctor._id,
+        fullName: doctor.fullName,
+        specialization: doctor.profile?.specialization || 'General Physician',
+        availability: doctor.profile?.availability || 'Mon - Sat, 10:00 AM - 06:00 PM',
+        clinic: formattedClinic // Attach the populated clinic data
+      }
     });
   } catch (err) {
     console.error(err);
@@ -93,6 +112,7 @@ export async function getDoctorProfile(req, res) {
   }
 }
 
+// ---- Get Doctor Availability Slots ----
 export async function getDoctorSlots(req, res) {
   const { doctorId } = req.params;
   const { date } = req.query;

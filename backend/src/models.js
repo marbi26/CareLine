@@ -116,13 +116,4 @@ const paymentSchema = new Schema({
 });
 const Payment = model('Payment', paymentSchema);
 
-/* ---------- 7. Chat Messages Collection ---------- */
-const messageSchema = new Schema({
-  senderId: { type: Schema.Types.ObjectId, required: true }, 
-  receiverId: { type: Schema.Types.ObjectId, required: true },
-  content: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
-});
-const Message = model('Message', messageSchema);
-
-export { Patient, Doctor, Admin, Support, Appointment, Payment, Message };
+export { Patient, Doctor, Admin, Support, Appointment, Payment };

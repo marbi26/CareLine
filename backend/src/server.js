@@ -11,7 +11,7 @@ import authRoutes from './routes/authRoutes.js';
 import doctorRoutes from './routes/doctorRoutes.js';
 import patientRoutes from './routes/patientRoutes.js';
 import queueRoutes from './routes/queueRoutes.js';
-import { Patient, Doctor, Admin, Support, Message, Payment } from './models.js';
+import { Patient, Doctor, Admin, Support, Payment } from './models.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -164,94 +164,6 @@ app.post('/api/user/update-profile', async (req, res) => {
     await user.save();
 
     res.json({ ok: true, user });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// ---- Messages / Direct Chat system handler ----
-app.get('/api/messages/contacts', async (req, res) => {
-  const { userId } = req.query;
-  try {
-    const messages = await Message.find({
-      $or: [{ senderId: userId }, { receiverId: userId }]
-    }).sort({ createdAt: -1 });
-
-    const contactIds = Array.from(new Set(messages.map(m => 
-      String(m.senderId) === String(userId) ? String(m.receiverId) : String(m.senderId)
-    )));
-
-    // Fallback contacts
-    if (contactIds.length === 0) {
-      const allDocs = await Doctor.find({ status: 'approved' }).limit(5);
-      const allPatients = await Patient.find({ status: 'approved' }).limit(5);
-      const allAdmins = await Admin.find({ status: 'approved' }).limit(5);
-      contactIds.push(
-        ...allDocs.map(u => String(u._id)), 
-        ...allPatients.map(u => String(u._id)),
-        ...allAdmins.map(u => String(u._id))
-      );
-    }
-
-    const contacts = await Promise.all(contactIds.map(async (id) => {
-      let u = await Patient.findById(id);
-      if (!u) u = await Doctor.findById(id);
-      if (!u) u = await Admin.findById(id);
-      if (!u) u = await Support.findById(id);
-
-      if (!u) return null;
-
-      const lastM = await Message.findOne({
-        $or: [
-          { senderId: userId, receiverId: id },
-          { senderId: id, receiverId: userId }
-        ]
-      }).sort({ createdAt: -1 });
-
-      return {
-        id: u._id,
-        fullName: u.fullName || 'CareLine User',
-        role: u.role,
-        subLabel: u.role === 'doctor' ? u.profile?.specialization : u.role === 'admin' ? 'Clinic Admin' : u.role === 'support' ? 'Support Staff' : 'Patient',
-        lastMessage: lastM ? { content: lastM.content } : null,
-        unreadCount: 0
-      };
-    }));
-
-    res.json({ contacts: contacts.filter(c => c !== null) });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-app.get('/api/messages/history', async (req, res) => {
-  const { user1, user2 } = req.query;
-  try {
-    const history = await Message.find({
-      $or: [
-        { senderId: user1, receiverId: user2 },
-        { senderId: user2, receiverId: user1 }
-      ]
-    }).sort({ createdAt: 1 });
-
-    res.json({
-      messages: history.map(m => ({
-        senderId: m.senderId,
-        content: m.content,
-        createdAt: m.createdAt
-      }))
-    });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-app.post('/api/messages/send', async (req, res) => {
-  const { senderId, receiverId, content } = req.body;
-  try {
-    const msg = new Message({ senderId, receiverId, content });
-    await msg.save();
-    res.json({ message: msg });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
