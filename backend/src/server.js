@@ -302,7 +302,7 @@ app.get('*', (req, res, next) => {
 
 // ---------- DB & Server ----------
 const PORT = process.env.PORT || 5050;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/careline';
+const MONGO_URI = process.env.mongodb_url || process.env.MONGODB_URL || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/careline';
 
 mongoose
   .connect(MONGO_URI)

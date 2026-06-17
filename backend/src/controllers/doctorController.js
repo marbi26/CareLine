@@ -60,12 +60,20 @@ export async function getDoctors(req, res) {
     }
 
     const doctors = await Doctor.find(filter);
-    const formatted = doctors.map(d => ({
-      id: d._id,
-      fullName: d.fullName,
-      specialization: d.profile?.specialization,
-      clinicAssociation: d.profile?.clinicAssociation || 'General Clinic',
-      availability: d.profile?.availability || 'Mon - Sat, 10:00 AM - 06:00 PM'
+    const formatted = await Promise.all(doctors.map(async (d) => {
+      const clinicName = d.profile?.clinicAssociation;
+      const clinic = await Admin.findOne({
+        status: 'approved',
+        'profile.clinicName': clinicName
+      });
+      return {
+        id: d._id,
+        fullName: d.fullName,
+        specialization: d.profile?.specialization,
+        clinicAssociation: d.profile?.clinicAssociation || 'General Clinic',
+        clinicId: clinic ? clinic._id : '',
+        availability: d.profile?.availability || 'Mon - Sat, 10:00 AM - 06:00 PM'
+      };
     }));
 
     res.json({ doctors: formatted });
@@ -91,6 +99,7 @@ export async function getDoctorProfile(req, res) {
 
     // Format the clinic profile so it fits the frontend requirements
     const formattedClinic = clinic ? {
+      id: clinic._id,
       name: clinic.profile?.clinicName || clinic.fullName,
       location: clinic.profile?.clinicLocation || 'Not specified',
       picture: clinic.profile?.clinicPicture || null,

@@ -10,6 +10,8 @@
     href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap"
     rel="stylesheet" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <!-- Razorpay Checkout SDK — loaded early so it is always available -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     :root {
       --bg: #f8fafc;
@@ -2135,6 +2137,56 @@
     .ps-label { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
     .ps-value { font-size: 1.1rem; font-family: var(--font-head); font-weight: 800; color: var(--teal-900); }
 
+    /* ── Razorpay Gateway Styles ── */
+    .rzp-tab {
+      flex: 1;
+      padding: 10px 4px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .rzp-tab.active {
+      color: #1d4ed8;
+      border-bottom-color: #1d4ed8;
+      background: #fff;
+    }
+    .rzp-tab:hover:not(.active) { background: #e2e8f0; }
+
+    .rzp-bank-btn {
+      padding: 10px 8px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      text-align: center;
+    }
+    .rzp-bank-btn:hover { border-color: #3b82f6; background: #eff6ff; }
+    .rzp-bank-btn.selected { border-color: #1d4ed8; background: #dbeafe; color: #1d4ed8; }
+
+    .rzp-otp-box {
+      width: 52px;
+      height: 52px;
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .rzp-otp-box:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+
+
+
     @keyframes pulse-bar {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.6; }
@@ -3158,37 +3210,143 @@
         <div class="wizard-panel" id="wp-step4">
           <div class="wizard-head">
             <div class="w-title">Secure Payment</div>
-            <div class="w-sub" id="paymentTokenMsg">Token reserved. Pay to confirm.</div>
+            <div class="w-sub" id="paymentTokenMsg">Token reserved. Pay to confirm your appointment.</div>
           </div>
-          
           <div class="payment-container">
             <div class="payment-summary">
               <span class="ps-label">Consultation Fee</span>
-              <span class="ps-value">₹500.00</span>
+              <span class="ps-value" id="paymentFeeDisplay">₹500.00</span>
+            </div>
+          </div>
+
+          <!-- Razorpay-style gateway -->
+          <div id="rzpGateway" style="margin-top:16px;">
+            <!-- Gateway Header -->
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(135deg,#072654,#1a56db);border-radius:12px 12px 0 0;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">💙</div>
+                <div>
+                  <div style="color:#fff;font-weight:700;font-size:0.95rem;font-family:var(--font-head);">CareLine Pay</div>
+                  <div style="color:#93c5fd;font-size:0.72rem;">Powered by Razorpay</div>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div style="color:#fff;font-weight:800;font-size:1.1rem;" id="rzpAmountDisplay">₹500</div>
+                <div style="color:#93c5fd;font-size:0.7rem;">Total payable</div>
+              </div>
             </div>
 
-            <div class="subtle" style="font-size:0.85rem;">Scan QR to pay using any UPI app</div>
-            
-            <div class="payment-qr-wrap">
-              <img id="paymentQR" src="assets/dummy_qr.png" alt="Payment QR"/>
+            <!-- Tab Bar -->
+            <div style="display:flex;background:#f1f5f9;border:1px solid #e2e8f0;border-top:none;">
+              <button class="rzp-tab active" id="rzpTab-upi" onclick="rzpSwitchTab('upi')">📱 UPI</button>
+              <button class="rzp-tab" id="rzpTab-card" onclick="rzpSwitchTab('card')">💳 Card</button>
+              <button class="rzp-tab" id="rzpTab-nb" onclick="rzpSwitchTab('nb')">🏦 Net Banking</button>
+              <button class="rzp-tab" id="rzpTab-wallet" onclick="rzpSwitchTab('wallet')">👛 Wallet</button>
             </div>
 
-            <div class="subtle" style="font-size:0.8rem; margin-bottom:16px;">Or select other payment method</div>
-            
-            <div class="payment-methods">
-              <button class="pay-btn" onclick="processPayment('UPI')"><i>📱</i><span>UPI</span></button>
-              <button class="pay-btn" onclick="processPayment('Card')"><i>💳</i><span>Card</span></button>
-              <button class="pay-btn" onclick="processPayment('NetBanking')"><i>🏦</i><span>Net Banking</span></button>
-              <button class="pay-btn" onclick="processPayment('Wallet')"><i>👛</i><span>Wallet</span></button>
-            </div>
+            <!-- Tab Content -->
+            <div style="background:#fff;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;padding:18px;">
 
-            <div style="margin-top:24px; display:flex; flex-direction:column; gap:10px;">
-               <div style="display:flex; gap:12px;">
-                  <button class="btnTiny secondary" style="flex:1;" onclick="simulatePaymentFailure()">Simulate Failure</button>
-                  <button class="btnTiny primary" style="flex:2; padding:12px;" onclick="processPayment('QR')">Confirm Payment</button>
-               </div>
-               <button class="wizard-back" onclick="wizardGoStep(3)" style="align-self:center;">← Change Slot / Back</button>
+              <!-- UPI Panel -->
+              <div id="rzpPanel-upi">
+                <div style="margin-bottom:14px;">
+                  <label style="font-size:0.82rem;font-weight:600;color:#475569;display:block;margin-bottom:6px;">UPI ID</label>
+                  <div style="display:flex;gap:8px;">
+                    <input id="rzpUpiId" type="text" placeholder="yourname@upi" style="flex:1;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:0.9rem;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'"/>
+                    <button onclick="rzpVerifyUpi()" style="padding:10px 14px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.82rem;">Verify</button>
+                  </div>
+                  <div id="rzpUpiStatus" style="font-size:0.78rem;margin-top:6px;color:#64748b;min-height:18px;"></div>
+                </div>
+                <div style="text-align:center;color:#94a3b8;font-size:0.78rem;margin:10px 0;">— OR scan QR —</div>
+                <div style="text-align:center;background:#f8fafc;border-radius:10px;padding:16px;border:1px dashed #cbd5e1;">
+                  <div style="font-size:0.78rem;color:#64748b;margin-bottom:8px;">Scan with any UPI app</div>
+                  <div style="width:100px;height:100px;margin:0 auto;background:repeating-linear-gradient(0deg,#1e3a8a 0,#1e3a8a 3px,transparent 0,transparent 8px),repeating-linear-gradient(90deg,#1e3a8a 0,#1e3a8a 3px,transparent 0,transparent 8px);border-radius:6px;position:relative;">
+                    <div style="position:absolute;inset:28px;background:#fff;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">💙</div>
+                  </div>
+                  <div style="font-size:0.72rem;color:#94a3b8;margin-top:8px;">careline@upi</div>
+                </div>
+                <button id="rzpPayBtn-upi" onclick="rzpDoPayment('UPI')" style="width:100%;margin-top:16px;padding:13px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;letter-spacing:0.3px;transition:opacity .2s;" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">Pay Now</button>
+              </div>
+
+              <!-- Card Panel -->
+              <div id="rzpPanel-card" style="display:none;">
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                  <div>
+                    <label style="font-size:0.82rem;font-weight:600;color:#475569;display:block;margin-bottom:6px;">Card Number</label>
+                    <input id="rzpCardNum" type="text" placeholder="4111 1111 1111 1111" maxlength="19" oninput="rzpFormatCard(this)" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:0.9rem;outline:none;font-family:monospace;transition:border-color .2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'"/>
+                  </div>
+                  <div>
+                    <label style="font-size:0.82rem;font-weight:600;color:#475569;display:block;margin-bottom:6px;">Cardholder Name</label>
+                    <input id="rzpCardName" type="text" placeholder="Name on card" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:0.9rem;outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'"/>
+                  </div>
+                  <div style="display:flex;gap:12px;">
+                    <div style="flex:1;">
+                      <label style="font-size:0.82rem;font-weight:600;color:#475569;display:block;margin-bottom:6px;">Expiry</label>
+                      <input id="rzpCardExp" type="text" placeholder="MM/YY" maxlength="5" oninput="rzpFormatExpiry(this)" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:0.9rem;outline:none;font-family:monospace;transition:border-color .2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'"/>
+                    </div>
+                    <div style="flex:1;">
+                      <label style="font-size:0.82rem;font-weight:600;color:#475569;display:block;margin-bottom:6px;">CVV</label>
+                      <input id="rzpCardCvv" type="password" placeholder="•••" maxlength="4" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:0.9rem;outline:none;font-family:monospace;transition:border-color .2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'"/>
+                    </div>
+                  </div>
+                </div>
+                <button id="rzpPayBtn-card" onclick="rzpDoPayment('Card')" style="width:100%;margin-top:16px;padding:13px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;letter-spacing:0.3px;transition:opacity .2s;" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">Pay Securely</button>
+              </div>
+
+              <!-- Net Banking Panel -->
+              <div id="rzpPanel-nb" style="display:none;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'SBI')">🏛️ SBI</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'HDFC')">🟥 HDFC</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'ICICI')">🟠 ICICI</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'Axis')">🟣 Axis</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'Kotak')">⬛ Kotak</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'PNB')">🟦 PNB</button>
+                </div>
+                <input id="rzpNbSearch" type="text" placeholder="Search other banks…" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:0.85rem;outline:none;margin-bottom:14px;transition:border-color .2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'"/>
+                <button id="rzpPayBtn-nb" onclick="rzpDoPayment('Net Banking')" style="width:100%;padding:13px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;letter-spacing:0.3px;transition:opacity .2s;" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">Proceed to Bank</button>
+              </div>
+
+              <!-- Wallet Panel -->
+              <div id="rzpPanel-wallet" style="display:none;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                  <button class="rzp-bank-btn" onclick="rzpSelectWallet(this,'PhonePe')">💜 PhonePe</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectWallet(this,'Paytm')">🔵 Paytm</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectWallet(this,'GPay')">🟢 Google Pay</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectWallet(this,'Amazon Pay')">🟠 Amazon Pay</button>
+                </div>
+                <button id="rzpPayBtn-wallet" onclick="rzpDoPayment('Wallet')" style="width:100%;padding:13px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;letter-spacing:0.3px;transition:opacity .2s;" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">Pay with Wallet</button>
+              </div>
+
+              <!-- Secure badges -->
+              <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid #f1f5f9;">
+                <span style="font-size:0.72rem;color:#94a3b8;">🔒 256-bit SSL Encrypted</span>
+                <span style="font-size:0.72rem;color:#94a3b8;">•</span>
+                <span style="font-size:0.72rem;color:#94a3b8;">PCI DSS Compliant</span>
+              </div>
             </div>
+          </div>
+
+          <!-- OTP Modal (shown after Pay button) -->
+          <div id="rzpOtpOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);align-items:center;justify-content:center;">
+            <div style="background:#fff;border-radius:16px;padding:28px;width:320px;box-shadow:0 24px 60px rgba(0,0,0,.25);text-align:center;">
+              <div style="font-size:2rem;margin-bottom:8px;">🔐</div>
+              <div style="font-weight:800;font-size:1.1rem;font-family:var(--font-head);margin-bottom:4px;">Enter OTP</div>
+              <div style="font-size:0.82rem;color:#64748b;margin-bottom:18px;">OTP sent to your registered mobile number</div>
+              <div style="display:flex;gap:10px;justify-content:center;margin-bottom:18px;">
+                <input class="rzp-otp-box" id="otp1" maxlength="1" type="text" oninput="rzpOtpNext(this,'otp2')"/>
+                <input class="rzp-otp-box" id="otp2" maxlength="1" type="text" oninput="rzpOtpNext(this,'otp3')"/>
+                <input class="rzp-otp-box" id="otp3" maxlength="1" type="text" oninput="rzpOtpNext(this,'otp4')"/>
+                <input class="rzp-otp-box" id="otp4" maxlength="1" type="text" oninput="rzpOtpNext(this,null)"/>
+              </div>
+              <div style="font-size:0.75rem;color:#94a3b8;margin-bottom:14px;">Use OTP: <strong style="color:#3b82f6;">1234</strong> (test mode)</div>
+              <button id="rzpOtpVerifyBtn" onclick="rzpVerifyOtp()" style="width:100%;padding:12px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.95rem;">Verify & Pay</button>
+              <button onclick="rzpCloseOtp()" style="margin-top:10px;width:100%;padding:10px;background:transparent;color:#94a3b8;border:none;cursor:pointer;font-size:0.85rem;">Cancel</button>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;">
+            <button class="wizard-back" onclick="wizardGoStep(3)" style="align-self:center;width:100%;">← Change Slot / Back</button>
           </div>
         </div>
 
@@ -4620,35 +4778,258 @@
     }
 
     async function processPayment(method) {
-      if (!wiz.newAppointment) return;
+      console.log('processPayment called — method:', method, '| appointment:', wiz.newAppointment);
+
+      if (!wiz.newAppointment) {
+        showToast('No active appointment session. Please book again.', '⚠️', true);
+        return;
+      }
+
+      const apptId = wiz.newAppointment.id || wiz.newAppointment._id;
+      if (!apptId) {
+        showToast('Appointment ID missing. Please try again.', '⚠️', true);
+        return;
+      }
+
+      document.querySelectorAll('.pay-btn, #wp-step4 .btnTiny').forEach(b => { b.disabled = true; });
+      showToast('Initiating secure payment…', '💳');
+
       try {
-        await api('/api/patient/payment/record', {
+        const fee = wiz.consultationFee || 500;
+        const orderData = await api('/api/patient/payment/razorpay-order', {
           method: 'POST',
-          body: {
-            patientId: authUser.id,
-            apptId: wiz.newAppointment.id,
-            amount: wiz.consultationFee || 500,
-            method,
-            status: 'success'
-          }
+          body: { apptId, amount: fee }
         });
-        
-        // Update status in confirmation step
-        const statusRow = [...g('confirmedDetails').querySelectorAll('.ti-row')].find(r => r.textContent.includes('Status'));
-        if (statusRow) statusRow.querySelector('span:last-child').textContent = 'In Queue (Paid)';
-        
-        wizardGoStep(5);
-        showToast('Payment successful! Booking confirmed.', '✅');
-        renderPatientAppointments();
-        if (g('patientPaymentsList')) renderPatientPayments();
+
+        if (orderData.dummy) {
+          showToast('Running in Demo mode — simulating payment…', 'ℹ️');
+          await new Promise(r => setTimeout(r, 1200));
+
+          await api('/api/patient/payment/razorpay-verify', {
+            method: 'POST',
+            body: {
+              patientId: authUser.id,
+              apptId,
+              amount: fee,
+              method: `Demo / ${method}`,
+              dummy: true
+            }
+          });
+
+          const statusRow = [...(g('confirmedDetails')?.querySelectorAll('.ti-row') || [])]
+            .find(r => r.textContent.includes('Status'));
+          if (statusRow) statusRow.querySelector('span:last-child').textContent = '✅ In Queue (Paid — Demo)';
+
+          wizardGoStep(5);
+          showToast('Demo payment successful! Appointment confirmed.', '✅');
+          renderPatientAppointments();
+          if (typeof renderPatientPayments === 'function') renderPatientPayments();
+        } else {
+          if (typeof Razorpay === 'undefined') {
+            throw new Error('Razorpay SDK failed to load.');
+          }
+
+          const options = {
+            key: orderData.keyId,
+            amount: Math.round(orderData.amount * 100),
+            currency: 'INR',
+            name: 'CareLine',
+            description: 'Consultation Fee',
+            order_id: orderData.orderId,
+            handler: async function (response) {
+              showToast('Verifying payment…', '🔄');
+              try {
+                const verifyRes = await api('/api/patient/payment/razorpay-verify', {
+                  method: 'POST',
+                  body: {
+                    patientId: authUser.id,
+                    apptId,
+                    amount: orderData.amount,
+                    method: `Razorpay / ${method}`,
+                    razorpayOrderId: response.razorpay_order_id,
+                    razorpayPaymentId: response.razorpay_payment_id,
+                    razorpaySignature: response.razorpay_signature,
+                    dummy: false
+                  }
+                });
+                if (verifyRes.success) {
+                  const sr = [...(g('confirmedDetails')?.querySelectorAll('.ti-row') || [])]
+                    .find(r => r.textContent.includes('Status'));
+                  if (sr) sr.querySelector('span:last-child').textContent = '✅ In Queue (Paid)';
+                  wizardGoStep(5);
+                  showToast('Payment verified! Booking confirmed.', '✅');
+                  renderPatientAppointments();
+                  if (typeof renderPatientPayments === 'function') renderPatientPayments();
+                } else {
+                  showToast('Payment verification failed. Contact support.', '❌', true);
+                }
+              } catch (err) {
+                showToast(err.message || 'Verification failed.', '❌', true);
+              }
+            },
+            prefill: {
+              name: authUser.fullName || '',
+              email: authUser.email || '',
+              contact: authUser.mobile || ''
+            },
+            theme: { color: '#3b82f6' },
+            modal: {
+              ondismiss: function () {
+                showToast('Payment cancelled. You can try again.', 'ℹ️');
+                document.querySelectorAll('.pay-btn, #wp-step4 .btnTiny').forEach(b => { b.disabled = false; });
+              }
+            }
+          };
+
+          const rzp = new Razorpay(options);
+          rzp.on('payment.failed', function (response) {
+            showToast('Payment failed: ' + (response.error?.description || 'Unknown error'), '❌', true);
+            document.querySelectorAll('.pay-btn, #wp-step4 .btnTiny').forEach(b => { b.disabled = false; });
+          });
+          rzp.open();
+          return; // buttons re-enabled by Razorpay modal callbacks
+        }
       } catch (e) {
-        showToast(e.message || 'Payment recording failed', '⚠️', true);
+        console.error('processPayment error:', e);
+        showToast(e.message || 'Payment failed. Please try again.', '⚠️', true);
+      } finally {
+        document.querySelectorAll('.pay-btn, #wp-step4 .btnTiny').forEach(b => { b.disabled = false; });
       }
     }
 
     function simulatePaymentFailure() {
        showToast('Payment failed. Please try again or use another method.', '❌', true);
     }
+
+    /* ─── Razorpay-style Gateway Functions ─── */
+    let _rzpSelectedMethod = 'UPI';
+    let _rzpSelectedBank = null;
+    let _rzpSelectedWallet = null;
+
+    function rzpSwitchTab(tab) {
+      ['upi','card','nb','wallet'].forEach(t => {
+        const panel = g(`rzpPanel-${t}`);
+        const btn   = g(`rzpTab-${t}`);
+        if (panel) panel.style.display = t === tab ? '' : 'none';
+        if (btn)   btn.classList.toggle('active', t === tab);
+      });
+      _rzpSelectedMethod = {upi:'UPI',card:'Card',nb:'Net Banking',wallet:'Wallet'}[tab] || tab;
+    }
+
+    function rzpFormatCard(inp) {
+      let v = inp.value.replace(/\D/g,'').substring(0,16);
+      inp.value = v.match(/.{1,4}/g)?.join(' ') || v;
+    }
+
+    function rzpFormatExpiry(inp) {
+      let v = inp.value.replace(/\D/g,'').substring(0,4);
+      if (v.length >= 3) v = v.substring(0,2) + '/' + v.substring(2);
+      inp.value = v;
+    }
+
+    function rzpVerifyUpi() {
+      const val = (g('rzpUpiId')?.value || '').trim();
+      const st  = g('rzpUpiStatus');
+      if (!val || !val.includes('@')) {
+        if (st) { st.style.color='#ef4444'; st.textContent='❌ Enter a valid UPI ID (e.g. name@upi)'; }
+        return;
+      }
+      if (st) { st.style.color='#64748b'; st.textContent='Verifying…'; }
+      setTimeout(() => {
+        if (st) { st.style.color='#22c55e'; st.textContent='✅ UPI ID verified successfully'; }
+      }, 900);
+    }
+
+    function rzpSelectBank(btn, bank) {
+      document.querySelectorAll('.rzp-bank-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      _rzpSelectedBank = bank;
+    }
+
+    function rzpSelectWallet(btn, wallet) {
+      document.querySelectorAll('.rzp-bank-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      _rzpSelectedWallet = wallet;
+    }
+
+    function rzpDoPayment(method) {
+      _rzpSelectedMethod = method;
+      // Show OTP overlay
+      const ov = g('rzpOtpOverlay');
+      if (ov) { ov.style.display = 'flex'; setTimeout(() => g('otp1')?.focus(), 100); }
+    }
+
+    function rzpOtpNext(inp, nextId) {
+      if (inp.value && nextId) g(nextId)?.focus();
+      // Auto-submit when all 4 filled
+      const all = ['otp1','otp2','otp3','otp4'].map(id => g(id)?.value || '').join('');
+      if (all.length === 4) { setTimeout(rzpVerifyOtp, 150); }
+    }
+
+    function rzpCloseOtp() {
+      const ov = g('rzpOtpOverlay');
+      if (ov) ov.style.display = 'none';
+      ['otp1','otp2','otp3','otp4'].forEach(id => { const el = g(id); if (el) el.value = ''; });
+    }
+
+    async function rzpVerifyOtp() {
+      const otp = ['otp1','otp2','otp3','otp4'].map(id => g(id)?.value || '').join('');
+      if (otp.length < 4) {
+        showToast('Please enter the 4-digit OTP.', '⚠️', true);
+        return;
+      }
+      if (otp !== '1234') {
+        showToast('Incorrect OTP. Use 1234 (test mode).', '❌', true);
+        ['otp1','otp2','otp3','otp4'].forEach(id => { const el = g(id); if (el) el.value = ''; });
+        g('otp1')?.focus();
+        return;
+      }
+
+      // OTP correct — close modal, show processing
+      rzpCloseOtp();
+
+      if (!wiz.newAppointment) { showToast('No appointment found. Please book again.', '⚠️', true); return; }
+      const apptId = wiz.newAppointment.id || wiz.newAppointment._id;
+      const fee    = wiz.consultationFee || 500;
+
+      const btn = g('rzpOtpVerifyBtn');
+      if (btn) btn.textContent = 'Processing…';
+
+      // Animate fee display
+      const feeEl = g('rzpAmountDisplay');
+      if (feeEl) feeEl.textContent = '⏳ Processing…';
+
+      showToast('Processing payment…', '🔄');
+
+      try {
+        await api('/api/patient/payment/razorpay-verify', {
+          method: 'POST',
+          body: {
+            patientId: authUser.id,
+            apptId,
+            amount: fee,
+            method: `${_rzpSelectedMethod}${_rzpSelectedBank ? ' / ' + _rzpSelectedBank : ''}${_rzpSelectedWallet ? ' / ' + _rzpSelectedWallet : ''}`,
+            dummy: true
+          }
+        });
+
+        // Update status row
+        const sr = [...(g('confirmedDetails')?.querySelectorAll('.ti-row') || [])]
+          .find(r => r.textContent.includes('Status'));
+        if (sr) sr.querySelector('span:last-child').textContent = `✅ In Queue (Paid via ${_rzpSelectedMethod})`;
+
+        if (feeEl) feeEl.textContent = '✅ Paid!';
+        wizardGoStep(5);
+        showToast(`Payment of ₹${fee} via ${_rzpSelectedMethod} successful! Appointment confirmed.`, '✅');
+        renderPatientAppointments();
+        if (typeof renderPatientPayments === 'function') renderPatientPayments();
+
+      } catch (e) {
+        if (feeEl) feeEl.textContent = `₹${fee}`;
+        showToast(e.message || 'Payment failed. Please try again.', '❌', true);
+      }
+    }
+
 
     /* ── Wizard step navigation ── */
     function wizardGoStep(n) {
@@ -4867,11 +5248,24 @@
           <div class="ti-row"><span class="ti-label">📍 Status</span><span style="color:var(--teal-700); font-weight:700;">Payment Pending</span></div>`;
 
         // Update payment step with reserved token
-        g('paymentTokenMsg').textContent = `Token #${appt.token} reserved. Pay Rs{wiz.consultationFee || 500} to confirm.`;
+        g('paymentTokenMsg').textContent = `Token #${appt.token} reserved. Pay ₹${wiz.consultationFee || 500} to confirm.`;
 
         // Jump to Payment (Step 4)
         wizardGoStep(4);
-        showToast(`Token #${appt.token} reserved! Please complete payment.`, '💳');
+
+        // Update gateway amount display
+        const fee = wiz.consultationFee || 500;
+        const feeEl = g('rzpAmountDisplay');
+        if (feeEl) feeEl.textContent = `₹${fee}`;
+        const feeDisplay = g('paymentFeeDisplay');
+        if (feeDisplay) feeDisplay.textContent = `₹${fee}.00`;
+
+        // Reset gateway to UPI tab
+        rzpSwitchTab('upi');
+        _rzpSelectedBank = null;
+        _rzpSelectedWallet = null;
+
+        showToast(`Token #${appt.token} reserved! Choose payment method below.`, '💳');
         renderPatientAppointments();
         window.__patientApptsRefresh = true;
       } catch (e) {
@@ -6891,7 +7285,7 @@ async function fetchPatientDoctorProfiles() {
     </div>
   </div>
 </div>
+<!-- Razorpay SDK loaded in <head> above -->
 <script>lucide.createIcons();</script>
-    }
 </body>
 </html>
