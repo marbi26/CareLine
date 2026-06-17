@@ -1,6 +1,8 @@
 // backend/src/server.js
 import 'dotenv/config';
 import express from 'express';
+import { createServer } from 'http';
+import { Server as IOServer } from 'socket.io';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import path from 'path';
@@ -42,6 +44,29 @@ function saveBase64Image(base64Str, prefix) {
 }
 
 const app = express();
+const httpServer = createServer(app);
+
+// ─── Socket.io real-time layer ───────────────────────────────────────────────
+export const io = new IOServer(httpServer, {
+  cors: { origin: '*' }
+});
+
+io.on('connection', (socket) => {
+  // Client sends { clinicId } to subscribe to a clinic's queue updates
+  socket.on('join:clinic', ({ clinicId }) => {
+    if (clinicId) {
+      socket.join(`clinic:${clinicId}`);
+    }
+  });
+
+  // Patient subscribes to their own appointment updates
+  socket.on('join:patient', ({ patientId }) => {
+    if (patientId) {
+      socket.join(`patient:${patientId}`);
+    }
+  });
+});
+// ─────────────────────────────────────────────────────────────────────────────
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -228,7 +253,7 @@ app.post('/api/user/update-profile', async (req, res) => {
         ...user.profile,
         clinicName: clinicName !== undefined ? clinicName : user.profile?.clinicName,
         clinicLocation: clinicLocation !== undefined ? clinicLocation : user.profile?.clinicLocation,
-        consultationFee: consultationFee !== undefined ? Number(consultationFee) : user.profile?.consultationFee,
+        consultationFee: (consultationFee !== undefined && consultationFee !== '') ? Number(consultationFee) : user.profile?.consultationFee,
         workingHours: workingHours !== undefined ? workingHours : user.profile?.workingHours,
         contactNumber: contactNumber !== undefined ? contactNumber : user.profile?.contactNumber,
         licenseNo: licenseNo !== undefined ? licenseNo : user.profile?.licenseNo,
@@ -249,13 +274,13 @@ app.post('/api/user/update-profile', async (req, res) => {
         gender: gender !== undefined ? gender : user.profile?.gender,
         bio: bio !== undefined ? bio : user.profile?.bio,
         medicalRegistrationNumber: medicalRegistrationNumber !== undefined ? medicalRegistrationNumber : user.profile?.medicalRegistrationNumber,
-        experience: experience !== undefined ? Number(experience) : user.profile?.experience,
+        experience: (experience !== undefined && experience !== '') ? Number(experience) : null,
         availability: availability !== undefined ? availability : user.profile?.availability,
       };
     } else if (user.role === 'patient') {
       user.profile = {
         ...user.profile,
-        age: age !== undefined ? Number(age) : user.profile?.age,
+        age: (age !== undefined && age !== '') ? Number(age) : null,
         gender: gender !== undefined ? gender : user.profile?.gender,
         bloodGroup: bloodGroup !== undefined ? bloodGroup : user.profile?.bloodGroup,
         allergies: allergies !== undefined ? allergies : user.profile?.allergies,
@@ -308,7 +333,7 @@ mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log('✅ MongoDB connected');
-    app.listen(PORT, () => console.log(`🚀 Server listening on ${PORT}`));
+    httpServer.listen(PORT, () => console.log(`🚀 Server + Socket.io listening on ${PORT}`));
   })
   .catch((err) => {
     console.error('❌ MongoDB connection error:', err);

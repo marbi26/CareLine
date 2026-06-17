@@ -73,6 +73,7 @@ export async function assignQueue(req, res) {
     });
     await appt.save();
 
+    await broadcastQueueUpdate(clinicId);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -89,6 +90,7 @@ export async function updateQueueStage(req, res) {
     appt.stage = stage;
     await appt.save();
 
+    await broadcastQueueUpdate(String(appt.clinicId), { apptId, stage, patientId: String(appt.patientId) });
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -105,10 +107,52 @@ export async function completeConsultation(req, res) {
     appt.stage = 'completed';
     await appt.save();
 
+    await broadcastQueueUpdate(String(appt.clinicId), { apptId, stage: 'completed', patientId: String(appt.patientId) });
     res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to complete appointment' });
+  }
+}
+
+// ─── Helper: broadcast full queue snapshot to a clinic room ─────────────────
+async function broadcastQueueUpdate(clinicId, changedAppt = null) {
+  try {
+    const { io } = await import('../server.js');
+    const today = new Date().toISOString().split('T')[0];
+    const appts = await Appointment.find({ clinicId, date: today }).sort({ token: 1 });
+    const queue = await Promise.all(appts.map(async (a) => {
+      const patient = await Patient.findById(a.patientId);
+      return {
+        apptId: a._id,
+        stage: a.stage,
+        patient: {
+          id: String(a.patientId),
+          fullName: patient?.fullName || 'Walk-in Patient',
+          mobile: patient?.mobile || ''
+        },
+        appt: {
+          token: a.token,
+          date: a.date,
+          time: a.time,
+          reason: a.reason
+        }
+      };
+    }));
+
+    const payload = { queue, changedAppt };
+
+    // 1. Broadcast to admin/doctor in the clinic queue room
+    io.to(`clinic:${clinicId}`).emit('queue:update', payload);
+
+    // 2. Also push directly to each patient's personal room so patients
+    //    receive updates even if they didn't join the clinic room
+    const patientIds = [...new Set(appts.map(a => String(a.patientId)))];
+    patientIds.forEach(pid => io.to(`patient:${pid}`).emit('queue:update', payload));
+
+    console.log(`📡 queue:update → clinic:${clinicId} + ${patientIds.length} patient room(s)`);
+  } catch (err) {
+    console.error('Socket emit error:', err.message);
   }
 }
 

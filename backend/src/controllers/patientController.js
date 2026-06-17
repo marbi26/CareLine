@@ -133,21 +133,64 @@ export async function getPatientAppointments(req, res) {
   const { id } = req.params;
   try {
     const appts = await Appointment.find({ patientId: id }).sort({ createdAt: -1 });
+    const AVG_MINS_PER_PATIENT = 10; // assumption for wait time estimate
+
     const formatted = await Promise.all(appts.map(async (a) => {
       const doc = await Doctor.findById(a.doctorId);
-      const cl = await Admin.findById(a.clinicId);
-      return {
-        id: a._id,
-        token: a.token,
-        date: a.date,
-        time: a.time,
+      const cl  = await Admin.findById(a.clinicId);
+
+      // Base fields always returned
+      const base = {
+        id:             a._id,
+        token:          a.token,
+        date:           a.date,
+        time:           a.time,
         doctorFullName: doc ? doc.fullName : 'Doctor',
-        clinicId: a.clinicId,
-        location: cl ? (cl.profile?.clinicName || cl.fullName) : 'Clinic Center',
-        reason: a.reason,
-        stage: a.stage,
-        paid: a.paid
+        doctorId:       a.doctorId,
+        specialization: doc?.profile?.specialization || '',
+        clinicId:       a.clinicId,
+        location:       cl ? (cl.profile?.clinicName || cl.fullName) : 'Clinic Center',
+        reason:         a.reason,
+        stage:          a.stage,
+        paid:           a.paid,
+        // defaults — overwritten below for active appointments
+        patientsAhead:  null,
+        currentToken:   null,
+        estimatedWait:  null
       };
+
+      // Only compute live queue fields for active (non-terminal) stages
+      const activeStages = ['in-queue', 'calling', 'in-consult', 'scheduled'];
+      if (activeStages.includes(a.stage)) {
+        try {
+          // All non-terminal appointments in this clinic today, sorted by token
+          const queue = await Appointment.find({
+            clinicId: a.clinicId,
+            date:     a.date,
+            stage:    { $in: ['in-queue', 'calling', 'in-consult'] }
+          }).sort({ token: 1 });
+
+          // Token currently being called
+          const callingAppt = queue.find(q => q.stage === 'calling');
+          base.currentToken = callingAppt ? callingAppt.token : null;
+
+          // Patients that still need to be seen BEFORE this patient
+          const myIdx = queue.findIndex(q => String(q._id) === String(a._id));
+          if (myIdx === -1) {
+            // Patient not in active queue yet (scheduled but not paid/queued)
+            base.patientsAhead = null;
+            base.estimatedWait = null;
+          } else {
+            // Count only those with a lower or equal token but not yet done
+            base.patientsAhead = myIdx; // 0 = you're next
+            base.estimatedWait = Math.max(0, myIdx * AVG_MINS_PER_PATIENT);
+          }
+        } catch (_) {
+          // silently ignore if queue lookup fails
+        }
+      }
+
+      return base;
     }));
 
     res.json({ appointments: formatted });
@@ -156,6 +199,7 @@ export async function getPatientAppointments(req, res) {
     res.status(500).json({ message: 'Failed to fetch appointments' });
   }
 }
+
 
 export async function getPatientPayments(req, res) {
   const { id } = req.params;

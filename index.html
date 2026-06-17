@@ -12,6 +12,8 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <!-- Razorpay Checkout SDK — loaded early so it is always available -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <!-- Socket.io client — loaded from CDN to support both Live Server and direct serve -->
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <style>
     :root {
       --bg: #f8fafc;
@@ -958,8 +960,9 @@
     }
 
     .logout:hover {
-      border-color: rgba(255, 112, 112, 0.35);
-      color: #ffd7d7;
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #dc2626;
+      background: rgba(239, 68, 68, 0.05);
     }
 
     .main {
@@ -1393,6 +1396,12 @@
     .btnTiny.primary {
       background: linear-gradient(135deg, var(--teal-700), var(--teal-500));
       border-color: var(--teal-300);
+      color: #ffffff;
+    }
+
+    .btnTiny.success {
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-color: #34d399;
       color: #ffffff;
     }
 
@@ -2265,6 +2274,55 @@
       display: block;
     }
 
+    /* Settings Form Custom Inputs */
+    .settings-input {
+      background: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+      color: #0f172a !important;
+      padding: 10px 10px 10px 36px !important;
+      border-radius: 10px !important;
+      width: 100% !important;
+      transition: all 0.2s ease !important;
+      font-size: 0.9rem !important;
+    }
+    .settings-select {
+      background: #ffffff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%230d9488' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>") no-repeat right 12px center !important;
+      background-size: 16px !important;
+      padding-right: 36px !important;
+      cursor: pointer !important;
+    }
+    .settings-input-no-icon {
+      background: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+      color: #0f172a !important;
+      padding: 10px 14px !important;
+      border-radius: 10px !important;
+      transition: all 0.2s ease !important;
+      font-size: 0.9rem !important;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05) !important;
+    }
+    .settings-input::placeholder, .settings-input-no-icon::placeholder, .settings-textarea::placeholder {
+      color: #64748b !important;
+    }
+    .settings-input:focus, .settings-input-no-icon:focus, .settings-textarea:focus {
+      border-color: var(--teal-500) !important;
+      background: #ffffff !important;
+      outline: none !important;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+    }
+    .settings-textarea {
+      background: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+      color: #0f172a !important;
+      padding: 14px !important;
+      border-radius: 10px !important;
+      width: 100% !important;
+      height: 100px !important;
+      resize: vertical !important;
+      font-family: inherit !important;
+      transition: all 0.2s ease !important;
+    }
+
     .record-card {
       padding: 16px;
       border-radius: 18px;
@@ -2331,6 +2389,31 @@
       position: relative;
       transition: var(--transition);
       color: var(--white);
+    }
+
+    /* Live WebSocket connection indicator */
+    .live-dot {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #6b7280;
+      border: 2px solid var(--bg);
+      transition: background 0.4s;
+    }
+    .live-dot.connected {
+      background: #10b981;
+      animation: livePulse 2s infinite;
+    }
+    @keyframes livePulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
+      50%       { box-shadow: 0 0 0 5px rgba(16,185,129,0); }
+    }
+    /* Real-time notification toast ring */
+    .rt-toast {
+      border-left: 3px solid #10b981 !important;
     }
 
     .notif-bell:hover {
@@ -2815,7 +2898,7 @@
           <div class="input-wrap">
             <span class="i-icon"><i data-lucide="lock"></i></span>
             <input type="password" id="l-pw" placeholder="Enter your password" autocomplete="current-password" />
-            <button class="pw-toggle" type="button" onclick="togglePw('l-pw',this)">👁️</button>
+            <button class="pw-toggle" type="button" onclick="togglePw('l-pw',this)"><i data-lucide="eye"></i></button>
           </div>
           <span class="field-error" id="err-l-pw">Password cannot be empty.</span>
         </div>
@@ -2830,7 +2913,7 @@
 
         <!-- OTP overlay -->
         <div class="otp-screen" id="otp-screen">
-          <span class="otp-illu">📲</span>
+          <span class="otp-illu"><i data-lucide="smartphone" style="width: 48px; height: 48px; margin: 0 auto; color: var(--accent);"></i></span>
           <h3>Verify Your Number</h3>
           <p>A 6-digit OTP has been sent to<br /><strong id="otp-target"></strong></p>
           <div class="otp-row" id="otp-row">
@@ -2886,7 +2969,7 @@
                 <option value="+86">+86 (CN)</option>
               </select>
               <div class="input-wrap phone-number-wrap">
-                <span class="i-icon">📱</span>
+                <span class="i-icon"><i data-lucide="smartphone"></i></span>
                 <input type="tel" id="s-mobile" placeholder="98765 43210" autocomplete="tel" />
               </div>
             </div>
@@ -2896,7 +2979,7 @@
           <div class="form-group">
             <label for="s-email">Email Address <span class="req">*</span></label>
             <div class="input-wrap">
-              <span class="i-icon">✉️</span>
+              <span class="i-icon"><i data-lucide="mail"></i></span>
               <input type="email" id="s-email" placeholder="you@email.com" autocomplete="email" />
             </div>
             <span class="field-error" id="err-s-email">Enter a valid email address.</span>
@@ -2906,16 +2989,16 @@
             <div class="form-group">
               <label for="s-pw">Password <span class="req">*</span></label>
               <div class="input-wrap">
-                <span class="i-icon">🔒</span>
+                <span class="i-icon"><i data-lucide="lock"></i></span>
                 <input type="password" id="s-pw" placeholder="Min 8 characters" autocomplete="new-password" />
-                <button class="pw-toggle" type="button" onclick="togglePw('s-pw',this)">👁️</button>
+                <button class="pw-toggle" type="button" onclick="togglePw('s-pw',this)"><i data-lucide="eye"></i></button>
               </div>
               <span class="field-error" id="err-s-pw">Minimum 8 characters required.</span>
             </div>
             <div class="form-group">
               <label for="s-cpw">Confirm Password <span class="req">*</span></label>
               <div class="input-wrap">
-                <span class="i-icon">🔑</span>
+                <span class="i-icon"><i data-lucide="key"></i></span>
                 <input type="password" id="s-cpw" placeholder="Re-enter" autocomplete="new-password" />
               </div>
               <span class="field-error" id="err-s-cpw">Passwords do not match.</span>
@@ -2965,19 +3048,14 @@
           </div>
           <div style="display:flex; align-items:center; gap:12px;">
             <div class="notif-wrap" style="position:relative;">
-              <button class="notif-bell" onclick="toggleNotifs()"><i data-lucide="bell" style="width:18px;height:18px;vertical-align:middle;"></i><span class="notif-badge">2</span></button>
+              <button class="notif-bell" id="notifBellBtn" onclick="toggleNotifs()" title="Notifications — WebSocket live">
+                <i data-lucide="bell" style="width:18px;height:18px;vertical-align:middle;"></i>
+                <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+                <span class="live-dot" id="liveDot" title="Connecting…"></span>
+              </button>
               <div class="notif-panel" id="notifPanel">
-                <div class="notif-header">Notifications</div>
-                <div class="notif-item">
-                  <strong>Patient Arrival</strong>
-                  <p>Asha Verma has checked in at the front desk.</p>
-                  <span class="notif-time">Just now</span>
-                </div>
-                <div class="notif-item">
-                  <strong>Lab Result Ready</strong>
-                  <p>CBC results for Rohan Singh are available.</p>
-                  <span class="notif-time">10 mins ago</span>
-                </div>
+                <div class="notif-header" style="display:flex;align-items:center;justify-content:space-between;">Notifications <span id="liveStatusLabel" style="font-size:0.7rem;font-weight:500;color:#6b7280;">● Connecting…</span></div>
+                <div id="notifList"><div style="padding:16px;color:var(--muted);font-size:0.85rem;text-align:center;">No new notifications</div></div>
               </div>
             </div>
             <div class="badge ok" id="clock">—</div>
@@ -3024,14 +3102,14 @@
             <div class="field-grow">
               <label for="doctorSearchQ">Search profiles</label>
               <div class="input-wrap">
-                <span class="i-icon">🔎</span>
+                <span class="i-icon"><i data-lucide="search"></i></span>
                 <input type="text" id="doctorSearchQ" placeholder="Doctor name or keyword" autocomplete="off" />
               </div>
             </div>
             <div class="field-grow" style="max-width:220px;">
               <label for="doctorSearchSpec">Specialty</label>
               <div class="input-wrap">
-                <span class="i-icon">🩺</span>
+                <span class="i-icon"><i data-lucide="stethoscope"></i></span>
                 <select id="doctorSearchSpec">
                   <option value="">Any specialty</option>
                   <option>General Physician</option>
@@ -3064,14 +3142,14 @@
             <div class="field">
               <label for="docDay">Day</label>
               <div class="input-wrap">
-                <span class="i-icon">📅</span>
+                <span class="i-icon"><i data-lucide="calendar"></i></span>
                 <input type="date" id="docDay" />
               </div>
             </div>
             <div class="field">
               <label for="docPatientSearch">Patient search</label>
               <div class="input-wrap">
-                <span class="i-icon">🔎</span>
+                <span class="i-icon"><i data-lucide="search"></i></span>
                 <input type="text" id="docPatientSearch" placeholder="Search by name / token / mobile" />
               </div>
             </div>
@@ -3111,7 +3189,7 @@
   <!-- Multi-Step Booking Wizard Modal -->
   <div class="modal-overlay" id="bookingModal">
     <div class="modal" id="bookingModalInner">
-      <button class="modal-close" onclick="closeBookingModal()">✖</button>
+      <button class="modal-close" onclick="closeBookingModal()"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
 
       <!-- Progress Bar -->
       <div class="wizard-progress" id="wizardProgress">
@@ -3136,7 +3214,7 @@
         </div>
         <div class="wizard-connector" id="wconn-4"></div>
         <div class="wizard-step-dot" id="wdot-5">
-          <div class="dot">✓</div>
+          <div class="dot"><i data-lucide="check" style="width:14px;height:14px;"></i></div>
           <div class="step-label">Confirmed</div>
         </div>
       </div>
@@ -3224,7 +3302,9 @@
             <!-- Gateway Header -->
             <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(135deg,#072654,#1a56db);border-radius:12px 12px 0 0;">
               <div style="display:flex;align-items:center;gap:10px;">
-                <div style="width:32px;height:32px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">💙</div>
+                <div style="width:32px;height:32px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;">
+                  <i data-lucide="shield-check" style="width:18px;height:18px;color:#1e3a8a;"></i>
+                </div>
                 <div>
                   <div style="color:#fff;font-weight:700;font-size:0.95rem;font-family:var(--font-head);">CareLine Pay</div>
                   <div style="color:#93c5fd;font-size:0.72rem;">Powered by Razorpay</div>
@@ -3238,10 +3318,10 @@
 
             <!-- Tab Bar -->
             <div style="display:flex;background:#f1f5f9;border:1px solid #e2e8f0;border-top:none;">
-              <button class="rzp-tab active" id="rzpTab-upi" onclick="rzpSwitchTab('upi')">📱 UPI</button>
-              <button class="rzp-tab" id="rzpTab-card" onclick="rzpSwitchTab('card')">💳 Card</button>
-              <button class="rzp-tab" id="rzpTab-nb" onclick="rzpSwitchTab('nb')">🏦 Net Banking</button>
-              <button class="rzp-tab" id="rzpTab-wallet" onclick="rzpSwitchTab('wallet')">👛 Wallet</button>
+              <button class="rzp-tab active" id="rzpTab-upi" onclick="rzpSwitchTab('upi')"><i data-lucide="smartphone" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i> UPI</button>
+              <button class="rzp-tab" id="rzpTab-card" onclick="rzpSwitchTab('card')"><i data-lucide="credit-card" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i> Card</button>
+              <button class="rzp-tab" id="rzpTab-nb" onclick="rzpSwitchTab('nb')"><i data-lucide="landmark" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i> Net Banking</button>
+              <button class="rzp-tab" id="rzpTab-wallet" onclick="rzpSwitchTab('wallet')"><i data-lucide="wallet" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i> Wallet</button>
             </div>
 
             <!-- Tab Content -->
@@ -3261,7 +3341,9 @@
                 <div style="text-align:center;background:#f8fafc;border-radius:10px;padding:16px;border:1px dashed #cbd5e1;">
                   <div style="font-size:0.78rem;color:#64748b;margin-bottom:8px;">Scan with any UPI app</div>
                   <div style="width:100px;height:100px;margin:0 auto;background:repeating-linear-gradient(0deg,#1e3a8a 0,#1e3a8a 3px,transparent 0,transparent 8px),repeating-linear-gradient(90deg,#1e3a8a 0,#1e3a8a 3px,transparent 0,transparent 8px);border-radius:6px;position:relative;">
-                    <div style="position:absolute;inset:28px;background:#fff;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">💙</div>
+                    <div style="position:absolute;inset:28px;background:#fff;border-radius:3px;display:flex;align-items:center;justify-content:center;">
+                      <i data-lucide="shield-check" style="width:20px;height:20px;color:#1e3a8a;"></i>
+                    </div>
                   </div>
                   <div style="font-size:0.72rem;color:#94a3b8;margin-top:8px;">careline@upi</div>
                 </div>
@@ -3296,12 +3378,12 @@
               <!-- Net Banking Panel -->
               <div id="rzpPanel-nb" style="display:none;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'SBI')">🏛️ SBI</button>
-                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'HDFC')">🟥 HDFC</button>
-                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'ICICI')">🟠 ICICI</button>
-                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'Axis')">🟣 Axis</button>
-                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'Kotak')">⬛ Kotak</button>
-                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'PNB')">🟦 PNB</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'SBI')">SBI</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'HDFC')">HDFC</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'ICICI')">ICICI</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'Axis')">Axis</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'Kotak')">Kotak</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectBank(this,'PNB')">PNB</button>
                 </div>
                 <input id="rzpNbSearch" type="text" placeholder="Search other banks…" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:0.85rem;outline:none;margin-bottom:14px;transition:border-color .2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'"/>
                 <button id="rzpPayBtn-nb" onclick="rzpDoPayment('Net Banking')" style="width:100%;padding:13px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;letter-spacing:0.3px;transition:opacity .2s;" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">Proceed to Bank</button>
@@ -3310,17 +3392,17 @@
               <!-- Wallet Panel -->
               <div id="rzpPanel-wallet" style="display:none;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-                  <button class="rzp-bank-btn" onclick="rzpSelectWallet(this,'PhonePe')">💜 PhonePe</button>
-                  <button class="rzp-bank-btn" onclick="rzpSelectWallet(this,'Paytm')">🔵 Paytm</button>
-                  <button class="rzp-bank-btn" onclick="rzpSelectWallet(this,'GPay')">🟢 Google Pay</button>
-                  <button class="rzp-bank-btn" onclick="rzpSelectWallet(this,'Amazon Pay')">🟠 Amazon Pay</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectWallet(this,'PhonePe')">PhonePe</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectWallet(this,'Paytm')">Paytm</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectWallet(this,'GPay')">Google Pay</button>
+                  <button class="rzp-bank-btn" onclick="rzpSelectWallet(this,'Amazon Pay')">Amazon Pay</button>
                 </div>
                 <button id="rzpPayBtn-wallet" onclick="rzpDoPayment('Wallet')" style="width:100%;padding:13px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;letter-spacing:0.3px;transition:opacity .2s;" onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">Pay with Wallet</button>
               </div>
 
               <!-- Secure badges -->
               <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid #f1f5f9;">
-                <span style="font-size:0.72rem;color:#94a3b8;">🔒 256-bit SSL Encrypted</span>
+                <span style="font-size:0.72rem;color:#94a3b8;display:inline-flex;align-items:center;gap:4px;"><i data-lucide="lock" style="width:12px;height:12px;"></i> 256-bit SSL Encrypted</span>
                 <span style="font-size:0.72rem;color:#94a3b8;">•</span>
                 <span style="font-size:0.72rem;color:#94a3b8;">PCI DSS Compliant</span>
               </div>
@@ -3330,7 +3412,7 @@
           <!-- OTP Modal (shown after Pay button) -->
           <div id="rzpOtpOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);align-items:center;justify-content:center;">
             <div style="background:#fff;border-radius:16px;padding:28px;width:320px;box-shadow:0 24px 60px rgba(0,0,0,.25);text-align:center;">
-              <div style="font-size:2rem;margin-bottom:8px;">🔐</div>
+              <div style="color:var(--accent);margin-bottom:8px;display:flex;justify-content:center;"><i data-lucide="shield-check" style="width:36px;height:36px;"></i></div>
               <div style="font-weight:800;font-size:1.1rem;font-family:var(--font-head);margin-bottom:4px;">Enter OTP</div>
               <div style="font-size:0.82rem;color:#64748b;margin-bottom:18px;">OTP sent to your registered mobile number</div>
               <div style="display:flex;gap:10px;justify-content:center;margin-bottom:18px;">
@@ -3353,7 +3435,7 @@
         <!-- Step 4: Final Confirmation -->
         <div class="wizard-panel" id="wp-step5">
         <div class="token-display">
-          <span class="token-emoji">🎉</span>
+          <span class="token-emoji"><i data-lucide="check-circle" style="width: 64px; height: 64px; margin: 0 auto; color: var(--success); stroke-width: 1.5; display: block;"></i></span>
           <p style="font-family:var(--font-head); font-weight:800; font-size:1.2rem; letter-spacing:-0.3px;">Appointment Confirmed!</p>
           <p class="subtle" style="margin:6px 0 0;">You're in the live queue. Your digital token:</p>
           <div class="token-number" id="confirmedToken">—</div>
@@ -3390,22 +3472,34 @@
       if (window.location.protocol === 'file:') {
         return `http://127.0.0.1:${CARELINE_API_PORT}`;
       }
-      const p = window.location.port;
-      if (String(p) === String(CARELINE_API_PORT)) {
+      const host = window.location.hostname;
+      const port = window.location.port;
+      
+      // If served directly from the backend (port matches 5050), use relative URL.
+      if (String(port) === String(CARELINE_API_PORT)) {
         return '';
       }
-      // Use IPv4 literal when the page is on "localhost" — avoids some Windows setups where "localhost" → ::1 and fetch fails.
-      const host = window.location.hostname;
-      const apiHost = host === 'localhost' ? '127.0.0.1' : host;
-      return `http://${apiHost}:${CARELINE_API_PORT}`;
+      
+      // If we are on a localhost/loopback address, target local backend.
+      if (host === 'localhost' || host === '127.0.0.1' || host === '[::1]') {
+        return `http://127.0.0.1:${CARELINE_API_PORT}`;
+      }
+      
+      // If we are on a local network IP address (e.g. 192.168.x.x, 10.x.x.x, 172.x.x.x)
+      // and NOT on the backend port (e.g. opened via Live Server on 5500), target local network backend port.
+      const isLocalIp = /^(127\.|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(host);
+      if (isLocalIp && port && String(port) !== String(CARELINE_API_PORT)) {
+        return `http://${host}:${CARELINE_API_PORT}`;
+      }
+      
+      // Otherwise (production deployment/proxy serving), relative path ("") works perfectly.
+      return '';
     }
 
     const API_BASE = resolveApiBase();
 
-    function toggleNotifs() {
-      const p = g('notifPanel');
-      if (p) p.classList.toggle('show');
-    }
+
+
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.notif-wrap')) {
         const p = g('notifPanel');
@@ -3437,12 +3531,12 @@
     <div class="form-row">
       <div class="form-group">
         <label for="s-age">Age</label>
-        <div class="input-wrap"><span class="i-icon">🎂</span>
+        <div class="input-wrap"><span class="i-icon"><i data-lucide="calendar"></i></span>
           <input type="number" id="s-age" placeholder="e.g. 28" min="1" max="120"/></div>
       </div>
       <div class="form-group">
         <label for="s-gender">Gender</label>
-        <div class="input-wrap"><span class="i-icon">⚧️</span>
+        <div class="input-wrap"><span class="i-icon"><i data-lucide="user"></i></span>
           <select id="s-gender"><option value="">Select gender</option>
             <option>Male</option><option>Female</option>
             <option>Other</option><option>Prefer not to say</option></select></div>
@@ -3503,6 +3597,7 @@
 
     function renderExtra(role) {
       document.getElementById('extra-fields').innerHTML = EXTRAS[role] || '';
+      reRenderIcons();
     }
     renderExtra('patient');
 
@@ -3554,7 +3649,8 @@
       const inp = g(id);
       const hide = inp.type === 'text';
       inp.type = hide ? 'password' : 'text';
-      btn.textContent = hide ? '👁️' : '🙈';
+      btn.innerHTML = hide ? '<i data-lucide="eye"></i>' : '<i data-lucide="eye-off"></i>';
+      reRenderIcons();
     }
 
     /* ─── TOAST ─── */
@@ -3803,7 +3899,16 @@
       g('dash').style.display = 'block';
       g('roleChip').textContent = prettyRole(user.role);
       g('whoName').textContent = user.fullName || 'CareLine User';
-      g('whoMeta').textContent = (user.mobile ? `📱 ${user.mobile}` : '') + (user.email ? `  ·  ✉️ ${user.email}` : '');
+      let metaHtml = '';
+      if (user.mobile) {
+        metaHtml += `<span style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="smartphone" style="width:12px;height:12px;"></i>${user.mobile}</span>`;
+      }
+      if (user.email) {
+        if (metaHtml) metaHtml += ' · ';
+        metaHtml += `<span style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="mail" style="width:12px;height:12px;"></i>${user.email}</span>`;
+      }
+      g('whoMeta').innerHTML = metaHtml || '—';
+      reRenderIcons();
 
       // hide auth UI
       document.querySelector('.page-wrap').style.display = 'none';
@@ -3812,6 +3917,7 @@
       dashView('overview');
       hydrateDash(user);
       startClock();
+      initSocket(user);          // ← real-time WebSocket
       showToast('Dashboard ready.', '✅');
 
       if (user.role === 'doctor') {
@@ -3821,6 +3927,7 @@
     }
 
     function logout() {
+      destroySocket();            // ← disconnect WebSocket
       authToken = '';
       authUser = null;
       localStorage.removeItem('careline_token');
@@ -3831,6 +3938,166 @@
       document.querySelector('.page-wrap').style.display = 'block';
       showToast('Logged out.', 'ℹ️');
     }
+
+    /* ═══════════════════════════════════════════════════════════════
+       REAL-TIME: Socket.io client
+       ═══════════════════════════════════════════════════════════════ */
+    window.__carelineSocket = null;
+    window.__notifList = [];   // in-memory notification log
+
+    function initSocket(user) {
+      if (!window.io) { console.warn('Socket.io client not loaded'); return; }
+      if (window.__carelineSocket) window.__carelineSocket.disconnect();
+
+      const socketUrl = API_BASE || window.location.origin;
+      const socket = window.io(socketUrl, { transports: ['websocket', 'polling'] });
+      window.__carelineSocket = socket;
+
+      socket.on('connect', async () => {
+        console.log('🟢 Socket connected:', socket.id);
+        setLiveDot(true);
+
+        if (user.role === 'admin') {
+          // Admin IS the clinic — join using their own ID
+          socket.emit('join:clinic', { clinicId: user.id });
+
+        } else if (user.role === 'patient') {
+          // Join personal room (always works)
+          socket.emit('join:patient', { patientId: user.id });
+          // Also join clinic room(s) for active appointments
+          try {
+            const data = await fetch(`/api/patient/${user.id}/appointments`).then(r => r.json());
+            const clinicIds = [...new Set(
+              (data.appointments || [])
+                .filter(a => !['completed','cancelled','no-show'].includes(a.stage))
+                .map(a => a.clinicId)
+                .filter(Boolean)
+            )];
+            clinicIds.forEach(cid => socket.emit('join:clinic', { clinicId: cid }));
+          } catch (_) {}
+
+        } else if (user.role === 'doctor') {
+          // Join the clinic room for the doctor's associated clinic
+          const clinicId = user.clinicId || user.profile?.clinicId || null;
+          if (clinicId) socket.emit('join:clinic', { clinicId });
+        }
+      });
+
+
+      socket.on('disconnect', () => {
+        console.log('🔴 Socket disconnected');
+        setLiveDot(false);
+      });
+
+      // ── Main real-time event: queue changed ──
+      socket.on('queue:update', ({ queue, changedAppt }) => {
+        console.log('📡 queue:update received', queue?.length, 'entries');
+
+        // Refresh the right view immediately
+        if (user.role === 'patient') {
+          renderPatientAppointments();
+          hydrateDash(user);   // refresh KPI queue-position card
+        } else if (user.role === 'admin' || user.role === 'doctor') {
+          if (typeof adminFetchQueue === 'function') adminFetchQueue();
+          hydrateDash(user);
+        }
+
+        // Smart notification: alert THIS patient if their stage changed
+        if (user.role === 'patient' && changedAppt) {
+          const myEntry = queue?.find(q => String(q.patient?.id) === String(user.id));
+          if (myEntry) {
+            const prev = window.__patientApptPrevState[myEntry.apptId] || {};
+            if (prev.stage !== myEntry.stage) {
+              const stageMsg = {
+                'calling':   { msg: `🔔 Token #${myEntry.appt?.token} — You are being called! Head to the counter.`, cls: 'rt-toast' },
+                'in-consult':{ msg: `👨‍⚕️ You are now in consultation.`, cls: 'rt-toast' },
+                'completed': { msg: `✅ Your consultation is complete. Take care!`, cls: 'rt-toast' },
+                'no-show':   { msg: `⚠️ Your token was marked as no-show.`, cls: '' }
+              }[myEntry.stage];
+              if (stageMsg) {
+                showToast(stageMsg.msg, '', false);
+                pushNotif(stageMsg.msg);
+                if (window.Notification && Notification.permission === 'granted') {
+                  new Notification('CareLine Update', { body: stageMsg.msg.replace(/^[^\w]+/, '') });
+                }
+              }
+            }
+          }
+        }
+
+        // Admin/doctor: show a brief badge bump
+        if ((user.role === 'admin' || user.role === 'doctor') && changedAppt) {
+          const label = { calling:'calling', 'in-consult':'in consult', completed:'done', 'in-queue':'queued' }[changedAppt.stage] || changedAppt.stage;
+          const msg = `Queue updated — token moved to "${label}"` ;
+          pushNotif(msg);
+        }
+      });
+    }
+
+    function destroySocket() {
+      if (window.__carelineSocket) {
+        window.__carelineSocket.disconnect();
+        window.__carelineSocket = null;
+      }
+      setLiveDot(false);
+    }
+
+    function setLiveDot(connected) {
+      const dot = g('liveDot');
+      const lbl = g('liveStatusLabel');
+      if (!dot) return;
+      if (connected) {
+        dot.classList.add('connected');
+        dot.title = 'Live — real-time updates active';
+        if (lbl) { lbl.textContent = '● Live'; lbl.style.color = '#10b981'; }
+      } else {
+        dot.classList.remove('connected');
+        dot.title = 'Disconnected — trying to reconnect…';
+        if (lbl) { lbl.textContent = '● Offline'; lbl.style.color = '#ef4444'; }
+      }
+    }
+
+    function pushNotif(msg) {
+      window.__notifList = window.__notifList || [];
+      const ts = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      window.__notifList.unshift({ msg, ts });
+      if (window.__notifList.length > 20) window.__notifList.pop();
+
+      // Update badge
+      window.__notifUnread = (window.__notifUnread || 0) + 1;
+      const badge = g('notifBadge');
+      if (badge) { badge.style.display = ''; badge.textContent = window.__notifUnread > 9 ? '9+' : window.__notifUnread; }
+
+      // Refresh panel if open
+      renderNotifPanel();
+    }
+
+    function renderNotifPanel() {
+      const list = g('notifList');
+      if (!list) return;
+      if (!window.__notifList || !window.__notifList.length) {
+        list.innerHTML = '<div style="padding:16px;color:var(--muted);font-size:0.85rem;text-align:center;">No new notifications</div>';
+        return;
+      }
+      list.innerHTML = window.__notifList.map(n => `
+        <div class="notif-item">
+          <p style="margin:0;font-size:0.88rem;">${escapeHtml(n.msg)}</p>
+          <span class="notif-time">${n.ts}</span>
+        </div>`).join('');
+    }
+
+    function toggleNotifs() {
+      const panel = g('notifPanel');
+      if (!panel) return;
+      const isOpen = panel.classList.toggle('show');
+      if (isOpen) {
+        window.__notifUnread = 0;
+        const badge = g('notifBadge');
+        if (badge) badge.style.display = 'none';
+        renderNotifPanel();
+      }
+    }
+    /* ═══════════════════════════════════════════════════════════════ */
 
     function buildDashNav() {
       const nav = g('dashNav');
@@ -3971,6 +4238,7 @@
       if (g('adminReportsView')) g('adminReportsView').classList.remove('show');
       if (g('adminQueueView')) g('adminQueueView').classList.remove('show');
       if (g('settingsView')) g('settingsView').classList.remove('show');
+      if (g('supportPatientsView')) g('supportPatientsView').classList.remove('show');
 
       if (view === 'overview') {
         g('dashDefault').style.display = 'block';
@@ -4057,13 +4325,14 @@
       } else if (view === 'appointments') {
         if (role === 'patient') {
           g('dashTitle').textContent = 'My Appointments';
-          g('dashSub').textContent = 'Live queue status — refreshes every 15 seconds.';
+          g('dashSub').textContent = 'Live queue status — updates instantly via WebSocket.';
           g('dashDefault').style.display = 'none';
           ensurePatientApptsView();
           g('patientApptsView').classList.add('show');
           renderPatientAppointments();
           clearInterval(window.__apptRefreshTimer);
-          window.__apptRefreshTimer = setInterval(renderPatientAppointments, 15000);
+          // Socket.io handles instant updates; keep a 60s fallback only
+          window.__apptRefreshTimer = setInterval(renderPatientAppointments, 60000);
           return;
         }
         g('dashTitle').textContent = 'Appointments';
@@ -4071,7 +4340,17 @@
       } else if (view === 'patients') {
         g('dashTitle').textContent = 'Patients';
         g('dashSub').textContent = 'Patient records & quick lookup (demo).';
+        g('dashDefault').style.display = 'none';
+        ensureSupportPatientsViewAttached();
+        g('supportPatientsView').classList.add('show');
+        return;
+      } else if (view === 'settings') {
+        g('dashTitle').textContent = 'Account Settings';
+        g('dashSub').textContent = 'Manage your profile details, configuration, and security.';
+        g('dashDefault').style.display = 'none';
+        ensureSettingsViewAttached();
         g('settingsView').classList.add('show');
+        renderSettings();
         return;
       } else if (view === 'messages') {
         g('dashTitle').textContent = 'Direct Messages';
@@ -4104,7 +4383,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
           <div>
             <h4 style="font-family:var(--font-head); font-weight:800; letter-spacing:-0.3px; margin:0;">My Appointments</h4>
-            <div class="subtle" style="font-size:0.8rem; margin-top:2px;">Auto-refreshes every 15 seconds</div>
+            <div class="subtle" style="font-size:0.8rem; margin-top:2px; display:flex; align-items:center; gap:4px;"><i data-lucide="zap" style="width:12px;height:12px;color:var(--accent);"></i> Live updates via WebSocket — instant notifications</div>
           </div>
           <button class="btnTiny primary" onclick="openBookingModal()">+ Book New</button>
         </div>
@@ -4124,11 +4403,12 @@
         if (!appts.length) {
           list.innerHTML = `
             <div style="text-align:center; padding:40px 0;">
-              <div style="font-size:3rem; margin-bottom:12px;">📅</div>
+              <div style="color:var(--teal-500); margin-bottom:12px; display:flex; justify-content:center;"><i data-lucide="calendar" style="width:3rem; height:3rem; stroke-width:1.5px; opacity:0.8;"></i></div>
               <div style="font-family:var(--font-head); font-weight:800; font-size:1.1rem; margin-bottom:6px;">No appointments yet</div>
               <div class="subtle" style="margin-bottom:18px;">Book your first appointment to get started.</div>
               <button class="btnTiny primary" onclick="openBookingModal()">Book Appointment</button>
             </div>`;
+          reRenderIcons();
           return;
         }
 
@@ -4159,7 +4439,7 @@
             return '<div class="status-step ' + cls + '"></div>';
           }).join('');
           
-          const showBar = a.stage !== 'completed' && a.stage !== 'no-show';
+          const showBar = a.stage !== 'completed' && a.stage !== 'no-show' && a.stage !== 'cancelled';
           const isLive = showBar && a.stage !== 'done';
           
           return `
@@ -4192,20 +4472,21 @@
                 <div class="at-live-details">
                   <div class="at-live-item">
                     <span class="label">Now Calling</span>
-                    <span class="value calling">${a.currentToken ? '#' + a.currentToken : 'Waiting...'}</span>
+                    <span class="value calling">${a.currentToken != null ? '#' + a.currentToken : 'Waiting...'}</span>
                   </div>
                   <div class="at-live-item">
                     <span class="label">Patients Ahead</span>
-                    <span class="value">${a.patientsAhead}</span>
+                    <span class="value">${a.patientsAhead != null ? (a.patientsAhead === 0 ? "You're next!" : a.patientsAhead) : '—'}</span>
                   </div>
                   <div class="at-live-item">
                     <span class="label">Est. Wait Time</span>
-                    <span class="value">${a.estimatedWait} mins</span>
+                    <span class="value">${a.estimatedWait != null ? (a.estimatedWait === 0 ? '< 5 mins' : a.estimatedWait + ' mins') : '—'}</span>
                   </div>
                 </div>
               ` : ''}
             </div>`;
         }).join('');
+        reRenderIcons();
       } catch (e) {
         if (list) list.innerHTML = '<div class="subtle" style="color:var(--error);">Could not load appointments. Is the server running?</div>';
       }
@@ -4355,6 +4636,7 @@
                   <option value="in-queue">Back to Queue</option>
                   <option value="calling">Calling</option>
                   <option value="in-consult">In Consult</option>
+                  <option value="completed">Done</option>
                   <option value="no-show">No Show</option>
                   <option value="delete">Remove Token</option>
                 </select>
@@ -4576,7 +4858,7 @@
             <div class="form-group">
               <label>Select Patient</label>
               <div class="input-wrap">
-                <span class="i-icon">👤</span>
+                <span class="i-icon"><i data-lucide="user"></i></span>
                 <select id="adminAssignPatient"><option value="">Loading patients...</option></select>
               </div>
             </div>
@@ -4585,14 +4867,14 @@
             <div class="form-group">
               <label>Patient Name</label>
               <div class="input-wrap">
-                <span class="i-icon">👤</span>
+                <span class="i-icon"><i data-lucide="user"></i></span>
                 <input type="text" id="adminAssignWalkinName" placeholder="Full Name" />
               </div>
             </div>
             <div class="form-group">
               <label>Mobile Number</label>
               <div class="input-wrap">
-                <span class="i-icon">📱</span>
+                <span class="i-icon"><i data-lucide="smartphone"></i></span>
                 <input type="text" id="adminAssignWalkinMobile" placeholder="10-digit mobile" />
               </div>
             </div>
@@ -4600,14 +4882,14 @@
           <div class="form-group">
             <label>Assign to Doctor</label>
             <div class="input-wrap">
-              <span class="i-icon">🩺</span>
+              <span class="i-icon"><i data-lucide="stethoscope"></i></span>
               <select id="adminAssignDoctor"><option value="">Loading doctors...</option></select>
             </div>
           </div>
           <div class="form-group">
             <label>Reason for Visit</label>
             <div class="input-wrap">
-              <span class="i-icon">📝</span>
+              <span class="i-icon"><i data-lucide="clipboard-list"></i></span>
               <input type="text" id="adminAssignReason" placeholder="e.g. Fever, Routine Checkup" />
             </div>
           </div>
@@ -4818,7 +5100,7 @@
 
           const statusRow = [...(g('confirmedDetails')?.querySelectorAll('.ti-row') || [])]
             .find(r => r.textContent.includes('Status'));
-          if (statusRow) statusRow.querySelector('span:last-child').textContent = '✅ In Queue (Paid — Demo)';
+          if (statusRow) statusRow.querySelector('span:last-child').textContent = 'In Queue (Paid — Demo)';
 
           wizardGoStep(5);
           showToast('Demo payment successful! Appointment confirmed.', '✅');
@@ -4855,7 +5137,7 @@
                 if (verifyRes.success) {
                   const sr = [...(g('confirmedDetails')?.querySelectorAll('.ti-row') || [])]
                     .find(r => r.textContent.includes('Status'));
-                  if (sr) sr.querySelector('span:last-child').textContent = '✅ In Queue (Paid)';
+                  if (sr) sr.querySelector('span:last-child').textContent = 'In Queue (Paid)';
                   wizardGoStep(5);
                   showToast('Payment verified! Booking confirmed.', '✅');
                   renderPatientAppointments();
@@ -4931,12 +5213,12 @@
       const val = (g('rzpUpiId')?.value || '').trim();
       const st  = g('rzpUpiStatus');
       if (!val || !val.includes('@')) {
-        if (st) { st.style.color='#ef4444'; st.textContent='❌ Enter a valid UPI ID (e.g. name@upi)'; }
+        if (st) { st.style.color='#ef4444'; st.textContent='Enter a valid UPI ID (e.g. name@upi)'; }
         return;
       }
       if (st) { st.style.color='#64748b'; st.textContent='Verifying…'; }
       setTimeout(() => {
-        if (st) { st.style.color='#22c55e'; st.textContent='✅ UPI ID verified successfully'; }
+        if (st) { st.style.color='#22c55e'; st.textContent='UPI ID verified successfully'; }
       }, 900);
     }
 
@@ -5016,9 +5298,9 @@
         // Update status row
         const sr = [...(g('confirmedDetails')?.querySelectorAll('.ti-row') || [])]
           .find(r => r.textContent.includes('Status'));
-        if (sr) sr.querySelector('span:last-child').textContent = `✅ In Queue (Paid via ${_rzpSelectedMethod})`;
+        if (sr) sr.querySelector('span:last-child').textContent = `In Queue (Paid via ${_rzpSelectedMethod})`;
 
-        if (feeEl) feeEl.textContent = '✅ Paid!';
+        if (feeEl) feeEl.textContent = 'Paid!';
         wizardGoStep(5);
         showToast(`Payment of ₹${fee} via ${_rzpSelectedMethod} successful! Appointment confirmed.`, '✅');
         renderPatientAppointments();
@@ -5084,14 +5366,15 @@
         }
         list.innerHTML = data.clinics.map(c => `
           <button class="select-card" data-id="${escapeHtml(c.id)}" onclick="selectClinic(this, '${escapeJs(c.id)}', '${escapeJs(c.name)}', ${c.consultationFee || 500})">
-            <div class="sc-icon">${c.picture ? `<img src="${escapeHtml(c.picture)}" alt="Clinic"/>` : '🏥'}</div>
+            <div class="sc-icon">${c.picture ? `<img src="${escapeHtml(c.picture)}" alt="Clinic"/>` : '<i data-lucide="building-2" style="width:24px;height:24px;color:var(--accent);"></i>'}</div>
             <div class="sc-body">
               <div class="sc-name">${escapeHtml(c.name)}</div>
-              <div class="sc-meta">📍 ${escapeHtml(c.location)}</div>
-              <div class="sc-meta" style="color:var(--teal-300); font-weight:700;">Fee: Rs{c.consultationFee || 500}</div>
+              <div class="sc-meta" style="display:flex;align-items:center;gap:4px;"><i data-lucide="map-pin" style="width:12px;height:12px;"></i> ${escapeHtml(c.location)}</div>
+              <div class="sc-meta" style="color:var(--teal-300); font-weight:700;">Fee: Rs${c.consultationFee || 500}</div>
             </div>
-            <div class="sc-check">✓</div>
+            <div class="sc-check"><i data-lucide="check" style="width:12px;height:12px;"></i></div>
           </button>`).join('');
+        reRenderIcons();
       } catch (e) {
         list.innerHTML = `<div class="doc-empty" style="color:var(--error);">Failed to load clinics. Is the server running?</div>`;
       }
@@ -5125,13 +5408,14 @@
         }
         list.innerHTML = data.doctors.map(d => `
           <button class="select-card" data-id="${escapeHtml(d.id)}" onclick="selectDoctor(this, '${escapeJs(d.id)}', '${escapeJs(d.fullName)}', '${escapeJs(d.specialization || '')}')">
-            <div class="sc-icon" style="font-size:1.6rem;">👨‍⚕️</div>
+            <div class="sc-icon" style="display:flex;align-items:center;justify-content:center;"><i data-lucide="user-round" style="width:24px;height:24px;color:var(--accent);"></i></div>
             <div class="sc-body">
               <div class="sc-name">Dr. ${escapeHtml(d.fullName)}</div>
-              <div class="sc-meta">🩺 ${escapeHtml(d.specialization || 'General Physician')} · ${escapeHtml(d.availability)}</div>
+              <div class="sc-meta" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;"><i data-lucide="stethoscope" style="width:12px;height:12px;"></i> ${escapeHtml(d.specialization || 'General Physician')} · ${escapeHtml(d.availability)}</div>
             </div>
-            <div class="sc-check">✓</div>
+            <div class="sc-check"><i data-lucide="check" style="width:12px;height:12px;"></i></div>
           </button>`).join('');
+        reRenderIcons();
       } catch (e) {
         list.innerHTML = `<div class="doc-empty" style="color:var(--error);">Failed to load doctors.</div>`;
       }
@@ -5240,12 +5524,13 @@
         // Prepare Confirmation (Step 5) - we do this now but show it later
         g('confirmedToken').textContent = `#${appt.token}`;
         g('confirmedDetails').innerHTML = `
-          <div class="ti-row"><span class="ti-label">📅 Date</span><span>${escapeHtml(appt.date)}</span></div>
-          <div class="ti-row"><span class="ti-label">⏰ Time</span><span>${escapeHtml(appt.time)}</span></div>
-          <div class="ti-row"><span class="ti-label">👨‍⚕️ Doctor</span><span>Dr. ${escapeHtml(appt.doctorName || wiz.doctorName)}</span></div>
-          <div class="ti-row"><span class="ti-label">🏥 Clinic</span><span>${escapeHtml(appt.location)}</span></div>
-          <div class="ti-row"><span class="ti-label">📝 Reason</span><span>${escapeHtml(appt.reason)}</span></div>
-          <div class="ti-row"><span class="ti-label">📍 Status</span><span style="color:var(--teal-700); font-weight:700;">Payment Pending</span></div>`;
+          <div class="ti-row"><span class="ti-label" style="display:inline-flex; align-items:center; gap:6px;"><i data-lucide="calendar" style="width:14px; height:14px;"></i> Date</span><span>${escapeHtml(appt.date)}</span></div>
+          <div class="ti-row"><span class="ti-label" style="display:inline-flex; align-items:center; gap:6px;"><i data-lucide="clock" style="width:14px; height:14px;"></i> Time</span><span>${escapeHtml(appt.time)}</span></div>
+          <div class="ti-row"><span class="ti-label" style="display:inline-flex; align-items:center; gap:6px;"><i data-lucide="user" style="width:14px; height:14px;"></i> Doctor</span><span>Dr. ${escapeHtml(appt.doctorName || wiz.doctorName)}</span></div>
+          <div class="ti-row"><span class="ti-label" style="display:inline-flex; align-items:center; gap:6px;"><i data-lucide="building-2" style="width:14px; height:14px;"></i> Clinic</span><span>${escapeHtml(appt.location)}</span></div>
+          <div class="ti-row"><span class="ti-label" style="display:inline-flex; align-items:center; gap:6px;"><i data-lucide="file-text" style="width:14px; height:14px;"></i> Reason</span><span>${escapeHtml(appt.reason)}</span></div>
+          <div class="ti-row"><span class="ti-label" style="display:inline-flex; align-items:center; gap:6px;"><i data-lucide="info" style="width:14px; height:14px;"></i> Status</span><span style="color:var(--teal-700); font-weight:700;">Payment Pending</span></div>`;
+        reRenderIcons();
 
         // Update payment step with reserved token
         g('paymentTokenMsg').textContent = `Token #${appt.token} reserved. Pay ₹${wiz.consultationFee || 500} to confirm.`;
@@ -5355,6 +5640,31 @@
       localStorage.setItem(DOC_STATE_KEY, JSON.stringify(st));
     }
 
+    function ensureSupportPatientsViewAttached() {
+      if (g('supportPatientsView')) return;
+      const main = document.querySelector('.main');
+      const v = document.createElement('div');
+      v.id = 'supportPatientsView';
+      v.className = 'patient-view-panel';
+      v.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <h4 style="font-family:var(--font-head); color:var(--white);">Patient Directory Overview</h4>
+    </div>
+    <div class="record-card" style="padding:40px 24px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:300px;">
+      <div style="margin-bottom:20px; color:var(--teal-400); display:flex; justify-content:center;"><i data-lucide="users" style="width:4.5rem; height:4.5rem; stroke-width:1.5px; opacity:0.85;"></i></div>
+      <h4 style="font-family:var(--font-head); font-weight:800; font-size:1.2rem; margin-bottom:8px; color:var(--white);">Patient Directory (Demo)</h4>
+      <p class="subtle" style="margin-bottom:24px; max-width:460px; line-height:1.6; font-size:0.88rem;">Search, manage, and view registration details & medical histories for all registered patients.</p>
+      <div style="width:100%; max-width:400px; position:relative; margin-bottom:24px;">
+        <input type="text" placeholder="Search patients by name or mobile..." style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:12px 14px; border-radius:10px; width:100%; outline:none;" disabled />
+      </div>
+      <div class="subtle" style="font-size:0.8rem; background:rgba(20,184,166,0.06); border:1px dashed rgba(20,184,166,0.2); padding:12px 20px; border-radius:10px; max-width:500px; display:flex; align-items:center; justify-content:center; gap:8px;">
+        <i data-lucide="info" style="width:16px; height:16px; color:var(--teal-400); flex-shrink:0;"></i>
+        <span>This feature is coming soon in the production release. For demo purposes, you can manage active patients directly from the <strong>Manage Queue</strong> dashboard.</span>
+      </div>
+    </div>`;
+      main.appendChild(v);
+    }
+
     function ensureSettingsViewAttached() {
       if (g('settingsView')) return;
       const main = document.querySelector('.main');
@@ -5381,26 +5691,24 @@
       const role = authUser.role;
 
       // ── Shared input style helpers ──
-      const inp = `background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 10px 10px 36px; border-radius:10px; width:100%; transition:all 0.3s ease; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);`;
-      const inpFocus = `onfocus="this.style.borderColor='var(--teal-400)'; this.style.background='rgba(0,0,0,0.4)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.25)';"`;
-      const cardStyle = `background:var(--surface-2); padding:24px; border-radius:16px; border:1px solid rgba(255,255,255,0.07); margin-bottom:20px; box-shadow:0 8px 24px rgba(0,0,0,0.15);`;
-      const cardStyleTeal = `background:linear-gradient(145deg, rgba(20,184,166,0.07), rgba(20,184,166,0.02)); padding:24px; border-radius:16px; border:1px solid rgba(20,184,166,0.15); margin-bottom:20px; box-shadow:0 8px 24px rgba(0,0,0,0.15);`;
-      const h4Style = `margin:0 0 18px 0; font-family:var(--font-head); font-weight:700; display:flex; align-items:center; gap:8px; font-size:1rem;`;
+      const cardStyle = `background:var(--glass-bg); padding:24px; border-radius:16px; border:1px solid var(--glass-border); margin-bottom:20px; box-shadow:var(--shadow-card);`;
+      const cardStyleTeal = `background:linear-gradient(145deg, rgba(20,184,166,0.05), rgba(20,184,166,0.01)); padding:24px; border-radius:16px; border:1px solid rgba(20,184,166,0.25); margin-bottom:20px; box-shadow:var(--shadow-card);`;
+      const h4Style = `margin:0 0 18px 0; font-family:var(--font-head); font-weight:800; display:flex; align-items:center; gap:8px; font-size:1.05rem;`;
 
       function field(label, inputHtml) {
-        return `<div class="form-group" style="margin:0;"><label style="color:rgba(255,255,255,0.75); font-size:0.82rem; font-weight:600; margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:0.5px;">${label}</label>${inputHtml}</div>`;
+        return `<div class="form-group" style="margin:0;"><label style="color:#1e293b; font-size:0.82rem; font-weight:700; margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:0.5px;">${label}</label>${inputHtml}</div>`;
       }
       function iconInput(icon, id, type, value, placeholder = '') {
-        return `<div style="position:relative;"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:0.5;display:flex;align-items:center;"><i data-lucide="${icon}" style="width:15px;height:15px;"></i></span><input type="${type}" id="${id}" value="${escapeHtml(String(value || ''))}" placeholder="${escapeHtml(placeholder)}" style="${inp}" ${inpFocus}/></div>`;
+        return `<div style="position:relative;"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#0d9488;opacity:0.8;display:flex;align-items:center;"><i data-lucide="${icon}" style="width:15px;height:15px;"></i></span><input type="${type}" id="${id}" value="${escapeHtml(String(value || ''))}" placeholder="${escapeHtml(placeholder)}" class="settings-input"/></div>`;
       }
       function iconSelect(icon, id, options, current) {
-        const opts = options.map(([v, l]) => `<option value="${v}" ${current === v ? 'selected' : ''}>${l}</option>`).join('');
-        return `<div style="position:relative;"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:0.5;display:flex;align-items:center;"><i data-lucide="${icon}" style="width:15px;height:15px;"></i></span><select id="${id}" style="${inp} appearance:none;" ${inpFocus.replace(/this\.style\.background[^;]+;/g,'')}><option value="">Select…</option>${opts}</select></div>`;
+        const opts = options.map(([v, l]) => `<option value="${v}" ${current === v ? 'selected' : ''} style="color:#0f172a; background:#ffffff;">${l}</option>`).join('');
+        return `<div style="position:relative;"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#0d9488;opacity:0.8;display:flex;align-items:center;"><i data-lucide="${icon}" style="width:15px;height:15px;"></i></span><select id="${id}" class="settings-input settings-select" style="appearance:none;"><option value="" style="color:#0f172a; background:#ffffff;">Select…</option>${opts}</select></div>`;
       }
 
       // ── 1. ACCOUNT DETAILS (all roles) ──
       let html = `<div style="${cardStyle}">
-        <h4 style="${h4Style} color:var(--white);"><i data-lucide="user-circle" style="width:20px;height:20px;color:var(--teal-400);"></i> Account Details</h4>
+        <h4 style="${h4Style} color:var(--white);"><i data-lucide="user-circle" style="width:20px;height:20px;color:#0d9488;"></i> Account Details</h4>
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:16px;">
           ${field('Full Name', iconInput('user', 'set-name', 'text', authUser.fullName))}
           ${field('Mobile Number', iconInput('smartphone', 'set-mobile', 'tel', authUser.mobile))}
@@ -5411,7 +5719,7 @@
       // ── 2. ROLE-SPECIFIC SECTION ──
       if (role === 'patient') {
         html += `<div style="${cardStyleTeal}">
-          <h4 style="${h4Style} color:var(--teal-300);"><i data-lucide="heart-pulse" style="width:20px;height:20px;"></i> Health Profile</h4>
+          <h4 style="${h4Style} color:#0d9488;"><i data-lucide="heart-pulse" style="width:20px;height:20px;"></i> Health Profile</h4>
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px;">
             ${field('Age', iconInput('calendar', 'set-age', 'number', p.age || '', 'e.g. 28'))}
             ${field('Gender', iconSelect('user', 'set-gender', [['Male','Male'],['Female','Female'],['Other','Other / Prefer not to say']], p.gender))}
@@ -5426,7 +5734,7 @@
 
       } else if (role === 'doctor') {
         html += `<div style="${cardStyleTeal}">
-          <h4 style="${h4Style} color:var(--teal-300);"><i data-lucide="stethoscope" style="width:20px;height:20px;"></i> Professional Profile</h4>
+          <h4 style="${h4Style} color:#0d9488;"><i data-lucide="stethoscope" style="width:20px;height:20px;"></i> Professional Profile</h4>
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
             ${field('Specialization', iconInput('stethoscope', 'set-spec', 'text', p.specialization || '', 'e.g. Cardiologist'))}
             ${field('Clinic / Hospital Association', iconInput('building-2', 'set-cname-doc', 'text', p.clinicAssociation || p.clinicName || '', 'e.g. City General Hospital'))}
@@ -5435,8 +5743,8 @@
             ${field('Gender', iconSelect('user', 'set-gender', [['Male','Male'],['Female','Female'],['Other','Other']], p.gender))}
             ${field('Availability Hours', iconInput('calendar-clock', 'set-avail', 'text', p.availability || '', 'e.g. Mon–Sat, 10AM–6PM'))}
             <div style="grid-column:1/-1;"><div class="form-group" style="margin:0;">
-              <label style="color:rgba(255,255,255,0.75); font-size:0.82rem; font-weight:600; margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:0.5px;">Professional Bio</label>
-              <textarea id="set-bio" placeholder="Write a short bio about your qualifications and experience…" style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:14px; border-radius:10px; width:100%; height:100px; resize:vertical; font-family:inherit; transition:all 0.3s ease;" onfocus="this.style.borderColor='var(--teal-400)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)';">${escapeHtml(p.bio || '')}</textarea>
+              <label style="color:#1e293b; font-size:0.82rem; font-weight:700; margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:0.5px;">Professional Bio</label>
+              <textarea id="set-bio" placeholder="Write a short bio about your qualifications and experience…" class="settings-textarea">${escapeHtml(p.bio || '')}</textarea>
               <p style="margin:6px 0 0 0; font-size:0.77rem; color:var(--muted);">Visible to patients on your public doctor profile.</p>
             </div></div>
           </div>
@@ -5447,24 +5755,24 @@
           ? (p.clinicPicture.startsWith('/uploads') ? API_BASE + p.clinicPicture : p.clinicPicture)
           : null;
         html += `<div style="${cardStyleTeal}">
-          <h4 style="${h4Style} color:var(--teal-300);"><i data-lucide="hospital" style="width:20px;height:20px;"></i> Clinic Configuration</h4>
+          <h4 style="${h4Style} color:#0d9488;"><i data-lucide="hospital" style="width:20px;height:20px;"></i> Clinic Configuration</h4>
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
             ${field('Clinic Name', iconInput('building-2', 'set-cname', 'text', p.clinicName || '', 'e.g. City Medical Center'))}
             ${field('Clinic Location / Address', iconInput('map-pin', 'set-loc', 'text', p.clinicLocation || '', 'e.g. Connaught Place, New Delhi'))}
-            ${field('Consultation Fee (₹)', `<div style="position:relative;"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:0.5;display:flex;align-items:center;"><i data-lucide="indian-rupee" style="width:15px;height:15px;"></i></span><input type="number" id="set-fee" value="${p.consultationFee || 500}" min="0" style="${inp}" ${inpFocus}/></div>`)}
+            ${field('Consultation Fee (₹)', `<div style="position:relative;"><span style="position:absolute;left:12px;top:50%;color:#0d9488;opacity:0.8;display:flex;align-items:center;"><i data-lucide="indian-rupee" style="width:15px;height:15px;"></i></span><input type="number" id="set-fee" value="${p.consultationFee || 500}" min="0" class="settings-input"/></div>`)}
             ${field('Working Hours', iconInput('clock', 'set-hours', 'text', p.workingHours || '', 'e.g. Mon–Sat 9AM–7PM'))}
             ${field('Contact Number', iconInput('phone', 'set-contact', 'tel', p.contactNumber || authUser.mobile, 'Clinic phone'))}
             ${field('Registration / License No.', iconInput('badge', 'set-license', 'text', p.licenseNo || '', 'e.g. CLN/2019/DL/1234'))}
           </div>
           <div style="margin-top:20px;">
-            <label style="color:rgba(255,255,255,0.75); font-size:0.82rem; font-weight:600; margin-bottom:10px; display:block; text-transform:uppercase; letter-spacing:0.5px;">Clinic Picture</label>
-            <div style="background:rgba(0,0,0,0.2); padding:16px; border-radius:12px; border:1px dashed rgba(255,255,255,0.12); display:flex; flex-direction:column; align-items:center; gap:14px;">
+            <label style="color:#1e293b; font-size:0.82rem; font-weight:700; margin-bottom:10px; display:block; text-transform:uppercase; letter-spacing:0.5px;">Clinic Picture</label>
+            <div style="background:rgba(13,148,136,0.02); padding:16px; border-radius:12px; border:2px dashed rgba(13,148,136,0.2); display:flex; flex-direction:column; align-items:center; gap:14px;">
               ${picSrc
                 ? `<img src="${escapeHtml(picSrc)}" alt="Clinic Picture" style="max-width:100%; height:180px; border-radius:10px; border:2px solid rgba(255,255,255,0.08); object-fit:cover; box-shadow:0 4px 12px rgba(0,0,0,0.4);"/>`
                 : `<div style="color:var(--muted); font-size:0.85rem; padding:24px; text-align:center;"><i data-lucide="image" style="width:2rem;height:2rem;opacity:0.3;"></i><div style="margin-top:8px;">No picture uploaded yet</div></div>`}
               <label class="btnTiny" style="cursor:pointer; display:inline-flex; align-items:center; gap:8px;">
                 <i data-lucide="upload-cloud" style="width:14px;height:14px;"></i> Upload / Change Picture
-                <input type="file" id="set-cpic" accept="image/*" style="display:none;" />
+                <input type="file" id="set-cpic" accept="image/*" style="display:none;" onchange="showToast('Image selected. Click Save Changes to upload.', '📸')"/>
               </label>
             </div>
           </div>
@@ -5472,7 +5780,7 @@
 
       } else if (role === 'support') {
         html += `<div style="${cardStyleTeal}">
-          <h4 style="${h4Style} color:var(--teal-300);"><i data-lucide="headphones" style="width:20px;height:20px;"></i> Staff Profile</h4>
+          <h4 style="${h4Style} color:#0d9488;"><i data-lucide="headphones" style="width:20px;height:20px;"></i> Staff Profile</h4>
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
             ${field('Employee ID', iconInput('badge', 'set-empid', 'text', p.employeeId || '', 'e.g. EMP-2024-0042'))}
             ${field('Department', iconSelect('building', 'set-dept', [['Reception','Reception / Front Desk'],['Lab','Laboratory'],['Pharmacy','Pharmacy'],['IT','IT & Systems'],['Administration','Administration'],['Other','Other']], p.department))}
@@ -5483,8 +5791,8 @@
       }
 
       // ── 3. QUICK ACTIONS ──
-      html += `<div style="background:linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)); padding:22px; border-radius:16px; border:1px solid rgba(255,255,255,0.07); margin-bottom:20px;">
-        <h4 style="${h4Style} color:var(--teal-200);"><i data-lucide="zap" style="width:18px;height:18px;"></i> Quick Actions</h4>
+      html += `<div style="${cardStyle}">
+        <h4 style="${h4Style} color:var(--white);"><i data-lucide="zap" style="width:18px;height:18px;color:#f59e0b;"></i> Quick Actions</h4>
         <div style="display:flex; flex-wrap:wrap; gap:10px;">
           <button class="btnTiny primary" type="button" onclick="saveSettings()">
             <i data-lucide="save" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Save Changes
@@ -5496,23 +5804,18 @@
           ${role === 'doctor' ? `<button class="btnTiny" type="button" onclick="dashView('doc-daily')"><i data-lucide="calendar-days" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Daily Schedule</button><button class="btnTiny" type="button" onclick="dashView('doc-rx')"><i data-lucide="pill" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Write Prescription</button>` : ''}
           ${role === 'admin' ? `<button class="btnTiny" type="button" onclick="dashView('admin-queue')"><i data-lucide="list-ordered" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Manage Queue</button><button class="btnTiny" type="button" onclick="dashView('admin-doctors')"><i data-lucide="stethoscope" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Manage Doctors</button><button class="btnTiny" type="button" onclick="dashView('admin-reports')"><i data-lucide="bar-chart-2" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Financial Reports</button>` : ''}
           ${role === 'support' ? `<button class="btnTiny" type="button" onclick="dashView('messages')"><i data-lucide="message-square" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Messages</button>` : ''}
-          <button class="btnTiny" type="button" onclick="if(confirm('Are you sure you want to log out?')) { localStorage.removeItem('careline_user'); localStorage.removeItem('careline_token'); location.reload(); }" style="border-color:rgba(255,100,100,0.4); color:#ff8888; margin-left:auto;">
+          <button class="btnTiny" type="button" onclick="if(confirm('Are you sure you want to log out?')) { localStorage.removeItem('careline_user'); localStorage.removeItem('careline_token'); location.reload(); }" style="border-color:rgba(239,68,68,0.3); color:#dc2626; background:rgba(239,68,68,0.05); margin-left:auto;">
             <i data-lucide="log-out" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Log Out
           </button>
         </div>
       </div>`;
 
       // ── 4. SECURITY ──
-      html += `<div style="background:linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); padding:24px; border-radius:16px; border:1px solid rgba(255,80,80,0.15); box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-        <h4 style="${h4Style} color:#ff8888;"><i data-lucide="shield-alert" style="width:20px;height:20px;"></i> Security</h4>
+      html += `<div style="background:var(--glass-bg); padding:24px; border-radius:16px; border:1px solid rgba(239,68,68,0.25); box-shadow:var(--shadow-card); margin-bottom:20px;">
+        <h4 style="${h4Style} color:#dc2626;"><i data-lucide="shield-alert" style="width:20px;height:20px;"></i> Security</h4>
         <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
-          <div class="form-group" style="margin:0;">
-            <label style="color:rgba(255,255,255,0.75); font-size:0.82rem; font-weight:600; margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:0.5px;">New Password</label>
-            <input type="password" id="set-newpwd" placeholder="Leave blank to keep current"
-              style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.1); color:white; padding:10px 14px; border-radius:10px; width:230px; transition:all 0.3s ease;"
-              onfocus="this.style.borderColor='var(--teal-400)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)';" />
-          </div>
-          <button class="btnTiny" type="button" style="border-color:rgba(255,80,80,0.4); color:#ff8888;" onclick="settingsChangePassword()">
+          ${field('New Password', `<input type="password" id="set-newpwd" placeholder="Leave blank to keep current" class="settings-input-no-icon" style="width:230px;" />`)}
+          <button class="btnTiny" type="button" style="border-color:rgba(239,68,68,0.3); color:#dc2626; background:rgba(239,68,68,0.05);" onclick="settingsChangePassword()">
             <i data-lucide="lock" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i> Update Password
           </button>
         </div>
@@ -5583,6 +5886,22 @@
         showToast('Settings saved successfully!', '');
         authUser = data.user;
         localStorage.setItem('careline_user', JSON.stringify(authUser));
+        
+        // Update sidebar profile details
+        if (g('whoName')) g('whoName').textContent = authUser.fullName || 'CareLine User';
+        let metaHtml = '';
+        if (authUser.mobile) {
+          metaHtml += `<span style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="smartphone" style="width:12px;height:12px;"></i>${authUser.mobile}</span>`;
+        }
+        if (authUser.email) {
+          if (metaHtml) metaHtml += ' · ';
+          metaHtml += `<span style="display:inline-flex;align-items:center;gap:4px;"><i data-lucide="mail" style="width:12px;height:12px;"></i>${authUser.email}</span>`;
+        }
+        if (g('whoMeta')) {
+          g('whoMeta').innerHTML = metaHtml || '—';
+          reRenderIcons();
+        }
+
         renderSettings();
       } catch (e) {
         showToast(e.message || 'Failed to update settings.', '', true);
@@ -5754,7 +6073,7 @@
         <div class="queueItem" style="${isSel ? 'border-color: rgba(45,224,208,0.32); background: rgba(45,224,208,0.06);' : ''}">
           <div>
             <div class="pName">Token #${escapeHtml(a.token)} · ${escapeHtml(p?.name || 'Patient')}</div>
-            <div class="pMeta">${escapeHtml(a.time)} · ${escapeHtml(a.reason)}<br/>📍 ${escapeHtml(a.location || '—')}</div>
+            <div class="pMeta">${escapeHtml(a.time)} · ${escapeHtml(a.reason)} · <span style="display:inline-flex;align-items:center;gap:3px;"><i data-lucide="map-pin" style="width:11px;height:11px;"></i>${escapeHtml(a.location || '—')}</span></div>
           </div>
           <div class="right">
             <span class="badge ${badge.c}">${escapeHtml(badge.t)}</span>
@@ -5763,6 +6082,7 @@
         </div>`;
         }).join('') : `<div class="subtle">No appointments match your search.</div>`;
         rightPane.innerHTML = docRenderSnapshotHtml();
+        reRenderIcons();
         return;
       }
 
@@ -5783,7 +6103,7 @@
         <div class="queueItem" style="${isSel ? 'border-color: rgba(45,224,208,0.32); background: rgba(45,224,208,0.06);' : ''}">
           <div>
             <div class="pName">#${escapeHtml(appt.token)} · ${escapeHtml(p?.name || 'Patient')}</div>
-            <div class="pMeta">${escapeHtml(appt.time)} · ${escapeHtml(appt.reason)} · 📱 ${escapeHtml(p?.mobile || '—')}</div>
+            <div class="pMeta">${escapeHtml(appt.time)} · ${escapeHtml(appt.reason)} · <span style="display:inline-flex;align-items:center;gap:3px;"><i data-lucide="smartphone" style="width:11px;height:11px;"></i>${escapeHtml(p?.mobile || '—')}</span></div>
           </div>
           <div class="right">
             <span class="badge ${badge.c}">${escapeHtml(badge.t)}</span>
@@ -5793,6 +6113,7 @@
         }).join('') : `<div class="subtle">Queue is empty (or no matches).</div>`;
 
         rightPane.innerHTML = docRenderQueueActionsHtml();
+        reRenderIcons();
         return;
       }
 
@@ -5872,7 +6193,7 @@
     <div class="historyCard">
       <div class="hTitle">${escapeHtml(p.name)}</div>
       <div class="hMeta">
-        📱 ${escapeHtml(p.mobile || '—')} · ${escapeHtml(p.gender || '—')} · ${escapeHtml(p.age ?? '—')} yrs
+        <span style="display:inline-flex;align-items:center;gap:3px;"><i data-lucide="smartphone" style="width:11px;height:11px;"></i>${escapeHtml(p.mobile || '—')}</span> · ${escapeHtml(p.gender || '—')} · ${escapeHtml(p.age ?? '—')} yrs
         ${appt ? ` · <span class="pill">Token #${escapeHtml(appt.token)} · ${escapeHtml(appt.time)}</span>` : ''}
       </div>
       <div class="hBody">
@@ -5986,7 +6307,7 @@
         let html = '';
         activeQueue.forEach(q => {
           const b = docBadge(q.stage);
-          const isSel = q.appt.id === __adminSelectedApptId;
+          const isSel = q.apptId === __adminSelectedApptId;
           const patientName = q.patient ? (q.patient.fullName || q.patient.name || 'Unknown') : 'Unknown';
           html += `
         <div class="queueItem" style="margin-bottom:8px; ${isSel ? 'border-color: rgba(45,224,208,0.32); background: rgba(45,224,208,0.06);' : ''}">
@@ -5996,16 +6317,17 @@
           </div>
           <div class="right">
             <span class="badge ${b.c}">${escapeHtml(b.t)}</span>
-            <button class="btnTiny primary" onclick="adminSelectAppt('${escapeJs(q.appt.id)}')">Manage</button>
+            <button class="btnTiny primary" onclick="adminSelectAppt('${escapeJs(q.apptId)}')">Manage</button>
           </div>
         </div>
         ${isSel ? `
           <div style="margin-bottom:12px; padding:10px; background:rgba(0,0,0,0.2); border-radius:12px; border:1px dashed rgba(45,224,208,0.2);">
             <div style="display:flex; flex-wrap:wrap; gap:10px;">
-              <button class="btnTiny primary" onclick="adminAdvanceQueue('${escapeJs(q.appt.id)}', 'calling')">Call Next</button>
-              <button class="btnTiny primary" onclick="adminAdvanceQueue('${escapeJs(q.appt.id)}', 'in-consult')">In Consult (Gone to Dr)</button>
-              <button class="btnTiny danger" onclick="adminAdvanceQueue('${escapeJs(q.appt.id)}', 'no-show')">No show</button>
-              <button class="btnTiny danger" style="background-color: var(--error); border-color: var(--error);" onclick="adminDeleteQueueItem('${escapeJs(q.appt.id)}')">Remove from Queue</button>
+              <button class="btnTiny primary" onclick="adminAdvanceQueue('${escapeJs(q.apptId)}', 'calling')">Call Next</button>
+              <button class="btnTiny primary" onclick="adminAdvanceQueue('${escapeJs(q.apptId)}', 'in-consult')">In Consult (Gone to Dr)</button>
+              <button class="btnTiny success" onclick="adminAdvanceQueue('${escapeJs(q.apptId)}', 'completed')">Done</button>
+              <button class="btnTiny danger" onclick="adminAdvanceQueue('${escapeJs(q.apptId)}', 'no-show')">No show</button>
+              <button class="btnTiny danger" style="background-color: var(--error); border-color: var(--error);" onclick="adminDeleteQueueItem('${escapeJs(q.apptId)}')">Remove from Queue</button>
             </div>
           </div>
         ` : ''}
@@ -6052,7 +6374,7 @@
       return `
     <div class="historyCard formLite">
       <div class="hTitle">${escapeHtml(p.name)} <span class="pill">${escapeHtml(tokenLine)}</span></div>
-      <div class="hMeta">📱 ${escapeHtml(p.mobile || '—')} · ${escapeHtml(p.gender || '—')} · ${escapeHtml(p.age ?? '—')} yrs</div>
+      <div class="hMeta"><span style="display:inline-flex;align-items:center;gap:3px;"><i data-lucide="smartphone" style="width:11px;height:11px;"></i>${escapeHtml(p.mobile || '—')}</span> · ${escapeHtml(p.gender || '—')} · ${escapeHtml(p.age ?? '—')} yrs</div>
       <div class="hBody">
         <div class="form-group">
           <label>Diagnosis / Notes</label>
@@ -6284,7 +6606,7 @@
       <div class="queueItem" style="${isSel ? 'border-color: rgba(45,224,208,0.32); background: rgba(45,224,208,0.06);' : ''}">
         <div>
           <div class="pName">${escapeHtml(p.name)}</div>
-          <div class="pMeta">📱 ${escapeHtml(p.mobile || '—')} · ${escapeHtml(p.gender || '—')} · ${escapeHtml(p.age ?? '—')} yrs</div>
+          <div class="pMeta"><span style="display:inline-flex;align-items:center;gap:3px;"><i data-lucide="smartphone" style="width:11px;height:11px;"></i>${escapeHtml(p.mobile || '—')}</span> · ${escapeHtml(p.gender || '—')} · ${escapeHtml(p.age ?? '—')} yrs</div>
         </div>
         <div class="right">
           <button class="btnTiny" type="button" onclick="docSelectPatient('${escapeJs(p.id)}')">Open</button>
@@ -6313,7 +6635,7 @@
       <div class="queueItem" style="${isSel ? 'border-color: rgba(45,224,208,0.32); background: rgba(45,224,208,0.06);' : ''}">
         <div>
           <div class="pName">${escapeHtml(p.name)}</div>
-          <div class="pMeta">📱 ${escapeHtml(p.mobile || '—')} · ${escapeHtml(p.gender || '—')} · ${escapeHtml(p.age ?? '—')} yrs</div>
+          <div class="pMeta"><span style="display:inline-flex;align-items:center;gap:3px;"><i data-lucide="smartphone" style="width:11px;height:11px;"></i>${escapeHtml(p.mobile || '—')}</span> · ${escapeHtml(p.gender || '—')} · ${escapeHtml(p.age ?? '—')} yrs</div>
         </div>
         <div class="right">
           <button class="btnTiny" type="button" onclick="docSelectPatient('${escapeJs(p.id)}')">Open</button>
@@ -6333,7 +6655,7 @@
       const header = `
     <div class="historyCard">
       <div class="hTitle">${escapeHtml(p?.name || 'Patient')}</div>
-      <div class="hMeta">📱 ${escapeHtml(p?.mobile || '—')} · ${escapeHtml(p?.gender || '—')} · ${escapeHtml(p?.age ?? '—')} yrs</div>
+      <div class="hMeta"><span style="display:inline-flex;align-items:center;gap:3px;"><i data-lucide="smartphone" style="width:11px;height:11px;"></i>${escapeHtml(p?.mobile || '—')}</span> · ${escapeHtml(p?.gender || '—')} · ${escapeHtml(p?.age ?? '—')} yrs</div>
       <div class="hBody" style="display:flex; flex-wrap:wrap; gap:10px;">
         <button class="btnTiny primary" type="button" onclick="dashView('doc-rx')">New prescription</button>
         <button class="btnTiny" type="button" onclick="docSeedDemo()">Load demo</button>
@@ -6446,11 +6768,12 @@
         const appts = data.appointments || [];
         if (!appts.length) {
           list.innerHTML = `<div style="text-align:center; padding:20px 0;">
-            <div style="font-size:2.2rem; margin-bottom:8px;">📅</div>
+            <div style="color:var(--teal-500); margin-bottom:8px; display:flex; justify-content:center;"><i data-lucide="calendar" style="width:2.5rem; height:2.5rem; stroke-width:1.5px; opacity:0.8;"></i></div>
             <div style="font-weight:700; margin-bottom:4px;">No appointments yet</div>
             <div class="subtle" style="margin-bottom:14px;">Book your first appointment now.</div>
             <button class="btnTiny primary" onclick="openBookingModal()">Book Appointment</button>
           </div>`;
+          reRenderIcons();
           return;
         }
         
@@ -6506,10 +6829,11 @@
         const queue = data.queue || [];
         if (!queue.length) {
           list.innerHTML = `<div style="text-align:center; padding:20px 0;">
-            <div style="font-size:2.2rem; margin-bottom:8px;">📋</div>
+            <div style="color:var(--teal-500); margin-bottom:8px; display:flex; justify-content:center;"><i data-lucide="clipboard-list" style="width:2.5rem; height:2.5rem; stroke-width:1.5px; opacity:0.8;"></i></div>
             <div style="font-weight:700; margin-bottom:4px;">No appointments today</div>
             <div class="subtle">Tokens assigned by the front desk will appear here.</div>
           </div>`;
+          reRenderIcons();
           return;
         }
         list.innerHTML = queue.slice(0, 4).map(q => {
@@ -6578,6 +6902,7 @@
       if (stage === 'in-consult') return { label: 'In Consult',  cls: 'ok' };
       if (stage === 'completed')  return { label: 'Completed',   cls: '' };
       if (stage === 'no-show')    return { label: 'No Show',     cls: 'err' };
+      if (stage === 'cancelled')  return { label: 'Cancelled',   cls: 'err' };
       return { label: 'Scheduled', cls: '' };
     }
 
@@ -7263,16 +7588,16 @@ async function fetchPatientDoctorProfiles() {
   <div style="background:#f1f2f4; border:1px solid var(--glass-border); border-radius:20px; max-width:520px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,0.5); position:relative;">
     
     <!-- Close button -->
-    <button onclick="closeDoctorProfileModal()" style="position:absolute; top:14px; right:16px; background:rgba(255,255,255,0.08); border:none; color:var(--white); width:32px; height:32px; border-radius:50%; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+    <button onclick="closeDoctorProfileModal()" style="position:absolute; top:14px; right:16px; background:rgba(0,0,0,0.06); border:none; color:#1e293b; width:32px; height:32px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
 
     <!-- Header -->
     <div style="padding:28px 28px 0 28px;">
       <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;">
         <div id="dpmAvatar" style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--teal-700),var(--teal-500)); display:flex; align-items:center; justify-content:center; font-size:1.6rem; font-weight:800; color:#fff; flex-shrink:0;">?</div>
         <div>
-          <div id="dpmName" style="font-size:1.25rem; font-weight:800; color:var(--white);">Loading...</div>
-          <div id="dpmSpec" style="font-size:0.85rem; color:var(--teal-400); margin-top:2px;"></div>
-          <span style="display:inline-block; margin-top:6px; background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(52,211,153,0.3); border-radius:999px; padding:2px 10px; font-size:0.72rem; font-weight:600;">✓ Clinic-Verified</span>
+          <div id="dpmName" style="font-size:1.25rem; font-weight:800; color:#1e293b;">Loading...</div>
+          <div id="dpmSpec" style="font-size:0.85rem; color:var(--teal-700); margin-top:2px;"></div>
+          <span style="display:inline-flex; align-items:center; gap:4px; margin-top:6px; background:rgba(5,150,105,0.1); color:#059669; border:1px solid rgba(5,150,105,0.25); border-radius:999px; padding:2px 10px; font-size:0.72rem; font-weight:600;"><i data-lucide="check-circle" style="width:12px;height:12px;"></i>Clinic-Verified</span>
         </div>
       </div>
     </div>
